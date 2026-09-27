@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%231f4fa3'/%3E%3Ctext x='50' y='72' text-anchor='middle' font-family='Arial' font-weight='700' font-size='64' fill='white'%3EB%3C/text%3E%3C/svg%3E">
+<title>Test Carné B</title>
+<meta name="description" content="Simulador gratuito del examen teórico del permiso B: 30 preguntas, 30 minutos, apto con 3 fallos como máximo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --surface2:#f5f7fa; --ink:#16202c; --muted:#5b6878; --line:#d8dee7;
+  --blue:#1f4fa3; --blue-soft:#e3ebf8; --yellow:#f2b705;
+  --red:#c8201d; --red-soft:#fbe7e6; --green:#1d7a45; --green-soft:#e2f3e8;
+  --display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#10151c; --surface:#19212b; --surface2:#1f2834; --ink:#e8edf3; --muted:#95a2b3; --line:#2c3746;
+    --blue:#6c9bf0; --blue-soft:#1d2c47; --red:#ef6b66; --red-soft:#3a1d1f; --green:#53c285; --green-soft:#16301f;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#10151c; --surface:#19212b; --surface2:#1f2834; --ink:#e8edf3; --muted:#95a2b3; --line:#2c3746;
+  --blue:#6c9bf0; --blue-soft:#1d2c47; --red:#ef6b66; --red-soft:#3a1d1f; --green:#53c285; --green-soft:#16301f;
+}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0}
+img,svg{max-width:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;padding:0 16px}
+.wrap{max-width:720px;margin:0 auto;padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.brand{display:flex;align-items:center;gap:12px}
+.plate{background:var(--blue);color:#fff;font-family:var(--display);font-weight:700;font-size:22px;width:44px;height:44px;border-radius:8px;display:grid;place-items:center;flex:none}
+.brand h1{font-size:30px}
+.brand p{margin:0;color:var(--muted);font-size:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rule{background:var(--surface2);border-radius:10px;padding:12px;text-align:center}
+.rule b{display:block;font-family:var(--display);font-size:30px;line-height:1;color:var(--blue);font-variant-numeric:tabular-nums}
+.rule span{font-size:13px;color:var(--muted)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.btn{border:0;border-radius:10px;padding:14px 16px;font-weight:700;font-size:16px}
+.btn-primary{background:var(--blue);color:#fff}
+[data-theme="dark"] .btn-primary{color:#0d1420}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn-primary{color:#0d1420}}
+.btn-ghost{background:var(--blue-soft);color:var(--blue)}
+.btn-small{padding:9px 14px;font-size:14px}
+.modes .btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
+.modes .btn small{font-weight:400;font-size:13px;opacity:.85}
+.label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.history{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.history li{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:8px 10px;background:var(--surface2);border-radius:8px;font-variant-numeric:tabular-nums}
+.pill{font-weight:700;font-size:12px;padding:2px 8px;border-radius:99px;letter-spacing:.04em}
+.pill.ok{background:var(--green-soft);color:var(--green)}
+.pill.ko{background:var(--red-soft);color:var(--red)}
+.muted{color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin:0}
+/* exam */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:10px;z-index:2}
+.timer{font-family:var(--display);font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.timer.low{color:var(--red)}
+.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--blue);transition:width .25s}
+.qnum{font-family:var(--display);font-size:15px;color:var(--muted);font-weight:600}
+.qtext{font-size:20px;font-weight:700;margin:6px 0 14px;line-height:1.35}
+.sign{display:flex;justify-content:center;margin:4px 0 14px}
+.sign svg{width:120px;height:120px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--surface2);border:2px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--ink)}
+.opt .letter{font-family:var(--display);font-weight:700;font-size:18px;width:28px;height:28px;border-radius:6px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);flex:none}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.sel .letter{background:var(--blue);color:var(--surface);border-color:var(--blue)}
+.opt.right{border-color:var(--green);background:var(--green-soft)}
+.opt.wrong{border-color:var(--red);background:var(--red-soft)}
+.opt:disabled{cursor:default}
+.expl{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--surface2);border-left:4px solid var(--blue);font-size:15px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+.dot{aspect-ratio:1;max-width:100%;border:1px solid var(--line);background:var(--surface2);border-radius:6px;font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);padding:0}
+.dot.done{background:var(--blue-soft);color:var(--blue);border-color:var(--blue)}
+.dot.cur{outline:2px solid var(--ink);outline-offset:1px}
+.dot.r{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.dot.w{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.confirm{display:flex;flex-direction:column;gap:10px;margin-top:14px;padding:14px;border-radius:10px;background:var(--surface2);border:1px solid var(--line)}
+.confirm .row{display:flex;gap:10px;flex-wrap:wrap}
+.btn-danger{background:var(--red);color:#fff}
+/* result */
+.verdict{text-align:center;padding-block:26px}
+.verdict h2{font-size:56px;letter-spacing:.02em}
+.verdict.ok h2{color:var(--green)}
+.verdict.ko h2{color:var(--red)}
+.verdict p{margin:6px 0 0;color:var(--muted)}
+.score{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.review{display:flex;flex-direction:column;gap:12px}
+.ritem{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface)}
+.ritem.w{border-left:5px solid var(--red)}
+.ritem.r{border-left:5px solid var(--green)}
+.ritem h3{font-family:var(--body);font-size:16px;margin-bottom:8px}
+.ritem p{margin:4px 0;font-size:14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 14px;font-size:14px}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+@media (max-width:480px){
+  .modes{grid-template-columns:1fr}
+  .grid{grid-template-columns:repeat(6,1fr)}
+  .qtext{font-size:18px}
+  .verdict h2{font-size:44px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app"></div>
+
+<script>
+/* ---------- Señales (dibujos genéricos del Catálogo oficial de señales) ---------- */
+const SIGNS={
+  stop:`<svg viewBox="0 0 100 100"><polygon points="30,3 70,3 97,30 97,70 70,97 30,97 3,70 3,30" fill="#c8201d" stroke="#fff" stroke-width="3"/><text x="50" y="61" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="28" fill="#fff">STOP</text></svg>`,
+  ceda:`<svg viewBox="0 0 100 100"><polygon points="4,8 96,8 50,92" fill="#c8201d"/><polygon points="20,17 80,17 50,72" fill="#fff"/></svg>`,
+  v50:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#c8201d"/><circle cx="50" cy="50" r="35" fill="#fff"/><text x="50" y="63" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="36" fill="#111">50</text></svg>`,
+  noAdelantar:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#c8201d"/><circle cx="50" cy="50" r="35" fill="#fff"/><rect x="24" y="42" width="20" height="16" rx="3" fill="#c8201d"/><rect x="56" y="42" width="20" height="16" rx="3" fill="#111"/><circle cx="29" cy="60" r="3" fill="#c8201d"/><circle cx="39" cy="60" r="3" fill="#c8201d"/><circle cx="61" cy="60" r="3" fill="#111"/><circle cx="71" cy="60" r="3" fill="#111"/></svg>`,
+  entradaProhibida:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#c8201d"/><rect x="18" y="42" width="64" height="16" fill="#fff"/></svg>`,
+  circulacionProhibida:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#c8201d"/><circle cx="50" cy="50" r="35" fill="#fff"/></svg>`,
+  noEstacionar:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#c8201d"/><circle cx="50" cy="50" r="35" fill="#1f4fa3"/><line x1="26" y1="26" x2="74" y2="74" stroke="#c8201d" stroke-width="9"/></svg>`,
+  noParar:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#c8201d"/><circle cx="50" cy="50" r="35" fill="#1f4fa3"/><line x1="26" y1="26" x2="74" y2="74" stroke="#c8201d" stroke-width="9"/><line x1="74" y1="26" x2="26" y2="74" stroke="#c8201d" stroke-width="9"/></svg>`,
+  obligatorioDerecha:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#1f4fa3"/><path d="M24 50 H66" stroke="#fff" stroke-width="10"/><polygon points="62,34 82,50 62,66" fill="#fff"/></svg>`,
+  curvaDerecha:`<svg viewBox="0 0 100 100"><polygon points="50,6 96,90 4,90" fill="#c8201d"/><polygon points="50,22 83,82 17,82" fill="#fff"/><path d="M42 78 V58 Q42 46 56 44" stroke="#111" stroke-width="7" fill="none"/><polygon points="54,36 66,44 54,52" fill="#111"/></svg>`,
+  finProhibiciones:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#111" stroke-width="3"/><line x1="22" y1="78" x2="78" y2="22" stroke="#111" stroke-width="3"/><line x1="18" y1="72" x2="72" y2="18" stroke="#111" stroke-width="3"/><line x1="28" y1="82" x2="82" y2="28" stroke="#111" stroke-width="3"/></svg>`
+};
+
+/* ---------- Banco de preguntas (normativa vigente a 2026) ---------- */
+const Q=[
+{c:"Velocidad",q:"¿Cuál es la velocidad máxima de un turismo en autopista o autovía?",o:["100 km/h","120 km/h","130 km/h"],a:1,e:"La velocidad genérica máxima para turismos y motocicletas en autopistas y autovías es de 120 km/h."},
+{c:"Velocidad",q:"En una carretera convencional, ¿a qué velocidad máxima puede circular un turismo?",o:["90 km/h","100 km/h","80 km/h"],a:0,e:"Desde 2019 el límite genérico en carreteras convencionales es de 90 km/h para turismos y motocicletas."},
+{c:"Velocidad",q:"En una vía urbana con un único carril por sentido de circulación, la velocidad máxima genérica es…",o:["50 km/h","40 km/h","30 km/h"],a:2,e:"Desde mayo de 2021, las vías urbanas de un solo carril por sentido tienen un límite genérico de 30 km/h."},
+{c:"Velocidad",q:"En una vía urbana con dos o más carriles por sentido, la velocidad máxima genérica es…",o:["50 km/h","60 km/h","30 km/h"],a:0,e:"Con dos o más carriles por sentido el límite genérico en ciudad es de 50 km/h."},
+{c:"Velocidad",q:"En una calle de plataforma única, donde calzada y acera están al mismo nivel, el límite es…",o:["30 km/h","20 km/h","10 km/h"],a:1,e:"En vías de plataforma única de calzada y acera el límite genérico es de 20 km/h."},
+{c:"Velocidad",q:"¿Puede un turismo superar la velocidad máxima de la vía para adelantar en una carretera convencional?",o:["Sí, hasta 20 km/h más","Sí, solo si adelanta a un camión","No, en ningún caso"],a:2,e:"La reforma de 2021 eliminó la posibilidad de superar en 20 km/h el límite para adelantar."},
+{c:"Velocidad",q:"En autopista, ¿cuál es la velocidad mínima a la que puede circular un turismo, salvo causa justificada?",o:["60 km/h","40 km/h","80 km/h"],a:0,e:"No se puede circular a menos de la mitad de la velocidad genérica de la vía: la mitad de 120 son 60 km/h."},
+{c:"Velocidad",sign:"v50",q:"¿Qué indica esta señal?",o:["Velocidad mínima obligatoria de 50 km/h","Velocidad máxima de 50 km/h","Velocidad aconsejada de 50 km/h"],a:1,e:"Círculo con borde rojo y número: prohíbe circular a más de la velocidad indicada. La mínima va en fondo azul y la aconsejada en rectángulo azul."},
+{c:"Alcohol y drogas",q:"La tasa máxima de alcohol para un conductor con permiso de más de dos años de antigüedad es…",o:["0,25 mg/l en aire espirado","0,15 mg/l en aire espirado","0,50 mg/l en aire espirado"],a:0,e:"Para conductores generales: 0,5 g/l en sangre o 0,25 mg/l en aire espirado."},
+{c:"Alcohol y drogas",q:"Un conductor novel (menos de dos años de permiso) no puede superar una tasa de alcohol en aire espirado de…",o:["0,25 mg/l","0,15 mg/l","0,00 mg/l"],a:1,e:"Noveles y profesionales: 0,3 g/l en sangre o 0,15 mg/l en aire espirado."},
+{c:"Alcohol y drogas",q:"Un medicamento con el pictograma de un coche dentro de un triángulo rojo en su envase indica que…",o:["Puede afectar a la capacidad de conducir","Está prohibido conducir durante un mes","Solo afecta a conductores profesionales"],a:0,e:"Ese pictograma avisa de que el fármaco puede alterar la capacidad para conducir. Lee el prospecto y consulta al médico."},
+{c:"Alcohol y drogas",q:"El alcohol, respecto al tiempo de reacción del conductor…",o:["Lo reduce","Lo aumenta","No lo modifica"],a:1,e:"El alcohol hace que tardemos más en reaccionar, así que aumenta la distancia recorrida antes de empezar a frenar."},
+{c:"Prioridad",q:"En una intersección sin señalizar, ¿quién tiene preferencia de paso?",o:["El vehículo que llega por la izquierda","El vehículo que llega por la derecha","El vehículo de mayor tamaño"],a:1,e:"Sin señalización, rige la norma general: preferencia para quien se aproxima por la derecha."},
+{c:"Prioridad",q:"En una glorieta, ¿quién tiene preferencia de paso por regla general?",o:["Los vehículos que van a entrar","Los vehículos que circulan dentro de la glorieta","Los que salen por la derecha"],a:1,e:"Salvo señalización en contra, tienen preferencia los vehículos que ya circulan por el anillo."},
+{c:"Prioridad",sign:"stop",q:"Ante esta señal, el conductor debe…",o:["Detenerse solo si vienen otros vehículos","Detenerse siempre en la línea y ceder el paso","Reducir la velocidad y ceder el paso"],a:1,e:"STOP obliga a detenerse siempre antes de la línea de detención, o antes de la intersección si no la hay, y ceder el paso."},
+{c:"Prioridad",sign:"ceda",q:"¿Qué obliga esta señal?",o:["A detenerse siempre","A ceder el paso a los vehículos de la vía a la que se aproxima","A ceder el paso solo a los peatones"],a:1,e:"Ceda el paso: solo hay que detenerse si es necesario para no obligar a frenar a quien tiene preferencia."},
+{c:"Prioridad",q:"¿Qué debe hacer si oye y ve acercarse una ambulancia con las señales luminosas y acústicas encendidas?",o:["Mantener la trayectoria y velocidad","Facilitarle el paso, apartándose a la derecha o deteniéndose si es necesario","Acelerar para no entorpecerla"],a:1,e:"Los vehículos prioritarios en servicio de urgencia tienen preferencia; hay que facilitar su paso con seguridad."},
+{c:"Prioridad",q:"Las indicaciones de un agente de tráfico, respecto a un semáforo en verde…",o:["Prevalecen sobre el semáforo","Solo se obedecen si el semáforo está apagado","Tienen el mismo valor"],a:0,e:"El orden de prioridad es: agentes, señalización circunstancial, semáforos, señales verticales y marcas viales."},
+{c:"Prioridad",q:"Al girar a la derecha hacia una calle, unos peatones la están cruzando. ¿Qué debe hacer?",o:["Pasar antes que ellos si va despacio","Cederles el paso","Avisarles con el claxon"],a:1,e:"Al girar hay que ceder el paso a los peatones que cruzan la calzada a la que se dirige, aunque no haya paso de peatones."},
+{c:"Señales",sign:"noAdelantar",q:"Esta señal indica…",o:["Adelantamiento prohibido","Fin de la prohibición de adelantar","Adelantamiento permitido solo a camiones"],a:0,e:"Prohíbe adelantar a vehículos de motor que no sean motocicletas de dos ruedas, desde la señal hasta la próxima intersección o la señal de fin."},
+{c:"Señales",sign:"entradaProhibida",q:"¿Qué significa esta señal?",o:["Circulación prohibida en ambos sentidos","Entrada prohibida a toda clase de vehículos","Calle cortada por obras"],a:1,e:"Círculo rojo con franja blanca horizontal: prohíbe la entrada a toda clase de vehículos, normalmente por ser sentido contrario."},
+{c:"Señales",sign:"circulacionProhibida",q:"¿Qué indica esta señal?",o:["Entrada prohibida solo a turismos","Circulación prohibida a toda clase de vehículos en ambos sentidos","Fin de todas las prohibiciones"],a:1,e:"Círculo blanco con borde rojo y sin símbolo: prohibida la circulación de vehículos en ambos sentidos."},
+{c:"Señales",sign:"noEstacionar",q:"Esta señal prohíbe…",o:["Parar y estacionar","Solo estacionar","Circular por el carril derecho"],a:1,e:"Con una sola franja roja prohíbe estacionar. Si lleva dos franjas en aspa prohíbe parar y estacionar."},
+{c:"Señales",sign:"noParar",q:"¿Qué prohíbe esta señal?",o:["Solo estacionar","La parada y el estacionamiento","Circular a vehículos pesados"],a:1,e:"Las dos franjas cruzadas prohíben tanto parar como estacionar en el lado de la vía donde se coloca."},
+{c:"Señales",sign:"obligatorioDerecha",q:"Esta señal significa…",o:["Sentido obligatorio hacia la derecha","Giro a la derecha prohibido","Carril derecho recomendado"],a:0,e:"Las señales circulares de fondo azul son de obligación: aquí, circular en el sentido indicado por la flecha."},
+{c:"Señales",sign:"curvaDerecha",q:"Esta señal avisa de…",o:["Obligación de girar a la derecha","Una curva peligrosa hacia la derecha","Carril de incorporación por la derecha"],a:1,e:"Las señales triangulares con borde rojo son de peligro. Esta advierte de una curva peligrosa hacia la derecha."},
+{c:"Señales",sign:"finProhibiciones",q:"¿Qué indica esta señal?",o:["Fin de todas las prohibiciones impuestas anteriormente","Zona de adelantamiento","Vía sin salida"],a:0,e:"Indica el final de las prohibiciones específicas señalizadas antes para los vehículos en movimiento."},
+{c:"Señales",q:"Un semáforo en amarillo fijo obliga a…",o:["Acelerar para pasar antes del rojo","Detenerse, salvo que no pueda hacerlo en condiciones de seguridad","Ceder el paso y continuar"],a:1,e:"El amarillo fijo significa detenerse como si fuera rojo, excepto si al encenderse ya está tan cerca que no puede parar con seguridad."},
+{c:"Señales",q:"Un semáforo en amarillo intermitente indica…",o:["Paso prohibido","Obligación de extremar la precaución y, en su caso, ceder el paso","Que el semáforo va a ponerse verde"],a:1,e:"El amarillo intermitente obliga a extremar la precaución y ceder el paso si fuera necesario."},
+{c:"Señales",q:"Una línea longitudinal continua en el centro de la calzada significa que…",o:["Se puede pisar para adelantar","Ningún conductor debe atravesarla ni circular sobre ella","Solo la pueden cruzar las motocicletas"],a:1,e:"La línea continua no debe pisarse ni atravesarse, salvo en situaciones puntuales como rebasar un obstáculo cuando lo permite la norma."},
+{c:"Adelantamiento",q:"Al adelantar a un ciclista en carretera, ¿qué separación lateral mínima debe dejar?",o:["1 metro","1,5 metros","0,5 metros"],a:1,e:"Hay que dejar al menos 1,5 m. En vías con más de un carril por sentido, hay que cambiar completamente de carril."},
+{c:"Adelantamiento",q:"¿Cuándo está permitido adelantar por la derecha?",o:["Nunca","Cuando el vehículo de delante indica claramente que va a girar a la izquierda","Siempre que haya espacio suficiente"],a:1,e:"Se adelanta por la izquierda como norma, pero por la derecha cuando el de delante señaliza e inicia un giro a la izquierda o se detiene para ello."},
+{c:"Adelantamiento",q:"Antes de iniciar un adelantamiento, lo primero es…",o:["Acelerar","Comprobar que hay espacio y visibilidad suficientes y que nadie le está adelantando","Tocar el claxon"],a:1,e:"Hay que asegurarse de que se puede completar la maniobra sin peligro: espacio, visibilidad y que nadie ha iniciado un adelantamiento a nuestro vehículo."},
+{c:"Seguridad vial",q:"Si su vehículo queda inmovilizado en la calzada, ¿qué dispositivo de señalización debe usar desde el 1 de enero de 2026?",o:["Los dos triángulos de emergencia","La baliza luminosa V-16 conectada","Solo las luces de emergencia"],a:1,e:"Desde 2026 la baliza V-16 conectada con la DGT sustituye a los triángulos. Se coloca en el techo sin necesidad de salir a la calzada."},
+{c:"Seguridad vial",q:"En un viaje largo, ¿cada cuánto conviene descansar?",o:["Cada 2 horas o 200 km aproximadamente","Cada 5 horas","Solo cuando se nota sueño"],a:0,e:"Se recomienda parar cada 2 horas o unos 200 km, porque la fatiga aparece antes de que la notemos."},
+{c:"Seguridad vial",q:"Si la velocidad se duplica, la distancia de frenado…",o:["Se duplica","Se multiplica aproximadamente por cuatro","Se mantiene igual"],a:1,e:"La distancia de frenado crece con el cuadrado de la velocidad: al doble de velocidad, unas cuatro veces más distancia."},
+{c:"Seguridad vial",q:"Circulando a 90 km/h, ¿cuántos metros recorre aproximadamente durante 1 segundo de tiempo de reacción?",o:["Unos 9 metros","Unos 25 metros","Unos 50 metros"],a:1,e:"90 km/h equivalen a 25 metros por segundo."},
+{c:"Seguridad vial",q:"Si nota que el coche hace aquaplaning, debe…",o:["Frenar a fondo","Soltar el acelerador sin frenar bruscamente y sujetar firme el volante","Girar el volante con fuerza"],a:1,e:"Hay que dejar que el neumático recupere adherencia: sin frenazos ni volantazos, soltando el acelerador."},
+{c:"Seguridad vial",q:"¿Qué distancia debe mantener con el vehículo de delante?",o:["Siempre 10 metros","La que le permita detenerse sin chocar si frena bruscamente","La mitad de su velocidad en metros"],a:1,e:"La norma exige una separación que permita detenerse en caso de frenado brusco, según velocidad, adherencia y condiciones."},
+{c:"Seguridad vial",q:"Los niños con una estatura igual o inferior a 135 cm deben viajar…",o:["En el asiento delantero con cinturón","En los asientos traseros, con un sistema de retención infantil homologado adecuado","En cualquier asiento, sin sistema de retención si el trayecto es urbano"],a:1,e:"Por regla general, van detrás y en un sistema de retención homologado. Hay excepciones tasadas, como que los asientos traseros estén ocupados por otros menores."},
+{c:"Seguridad vial",q:"Una silla infantil a contramarcha colocada en el asiento delantero exige…",o:["Desactivar el airbag frontal del acompañante","Llevar el airbag activado","Nada especial"],a:0,e:"Si el airbag frontal se activa, puede golpear la silla y causar lesiones graves al niño."},
+{c:"Seguridad vial",q:"El sistema ABS sirve para…",o:["Frenar en menos metros en cualquier situación","Evitar el bloqueo de las ruedas y poder mantener el control de la dirección al frenar","Controlar la tracción al acelerar"],a:1,e:"El ABS impide que las ruedas se bloqueen, así el conductor puede seguir dirigiendo el coche durante una frenada fuerte."},
+{c:"Alumbrado",q:"¿Es obligatorio llevar encendida la luz de cruce al circular por un túnel?",o:["Solo si está mal iluminado","Sí, siempre","No, basta con las de posición"],a:1,e:"En túneles y pasos inferiores señalizados es obligatorio encender la luz de cruce, aunque estén iluminados."},
+{c:"Alumbrado",q:"La luz antiniebla trasera puede usarse…",o:["Siempre que llueva","Con niebla espesa, lluvia muy intensa, nevada o nubes densas de polvo o humo","Por la noche en vías interurbanas"],a:1,e:"Solo en condiciones meteorológicas o ambientales especialmente desfavorables, porque deslumbra a quien va detrás."},
+{c:"Alumbrado",q:"Circulando de noche con luz de carretera (largas), al cruzarse con otro vehículo debe…",o:["Mantenerla encendida","Cambiar a luz de cruce para no deslumbrar","Apagar todas las luces un momento"],a:1,e:"Hay que cambiar a luz de cruce ante un vehículo que se aproxima en sentido contrario o al que sigue de cerca."},
+{c:"Permiso y puntos",q:"¿Con cuántos puntos empieza un conductor novel?",o:["12 puntos","8 puntos","10 puntos"],a:1,e:"Los noveles comienzan con 8 puntos. Si no pierden ninguno en dos años, pasan a 12."},
+{c:"Permiso y puntos",q:"Conducir sujetando el teléfono móvil con la mano supone la pérdida de…",o:["3 puntos","6 puntos","4 puntos"],a:1,e:"Desde marzo de 2022, sujetar el móvil con la mano mientras se conduce resta 6 puntos, además de la multa de 200 €."},
+{c:"Permiso y puntos",q:"No utilizar el cinturón de seguridad conlleva la pérdida de…",o:["2 puntos","3 puntos","4 puntos"],a:2,e:"Desde 2022, no usar o usar mal el cinturón, el casco o los sistemas de retención infantil resta 4 puntos."},
+{c:"Permiso y puntos",q:"El permiso de clase B autoriza a conducir turismos con una masa máxima autorizada de hasta…",o:["3.500 kg","4.250 kg","2.500 kg"],a:0,e:"El permiso B permite conducir automóviles de hasta 3.500 kg de MMA y hasta 9 plazas, incluida la del conductor."},
+{c:"Permiso y puntos",q:"Con el permiso B, ¿qué remolque se puede enganchar sin requisitos adicionales?",o:["Uno de hasta 750 kg de MMA","Cualquier remolque","Solo caravanas"],a:0,e:"Con el B se puede llevar un remolque ligero de hasta 750 kg de MMA. Para más peso puede necesitarse el B96 o el BE."},
+{c:"Permiso y puntos",q:"¿Qué edad mínima se exige para obtener el permiso de clase B?",o:["17 años","18 años","21 años"],a:1,e:"La edad mínima para el permiso B es de 18 años."},
+{c:"Vehículo",q:"¿Cuál es la profundidad mínima legal del dibujo de los neumáticos de un turismo?",o:["1 mm","1,6 mm","3 mm"],a:1,e:"La profundidad mínima en las ranuras principales es de 1,6 mm, aunque se recomienda cambiarlos antes."},
+{c:"Vehículo",q:"Un turismo de uso particular debe pasar su primera ITV cuando cumple…",o:["2 años","4 años","5 años"],a:1,e:"Primera ITV a los 4 años, después cada 2 años hasta los 10 y, desde entonces, cada año."},
+{c:"Vehículo",q:"¿Qué seguro es obligatorio para circular con un vehículo a motor?",o:["El seguro a todo riesgo","El seguro de responsabilidad civil","El seguro de lunas"],a:1,e:"El seguro obligatorio cubre la responsabilidad civil por los daños causados a terceros."},
+{c:"Normas de circulación",q:"En una autovía de tres carriles por sentido y con poco tráfico, ¿por qué carril debe circular normalmente?",o:["Por el central","Por el de la derecha","Por el de la izquierda"],a:1,e:"Se circula por el carril de la derecha y se usan los demás para adelantar, salvo que la densidad del tráfico lo justifique."},
+{c:"Normas de circulación",q:"En una autopista, ¿está permitido circular marcha atrás?",o:["Sí, si se ha pasado la salida","No, está prohibido","Solo por el arcén"],a:1,e:"En autopistas y autovías está prohibido circular marcha atrás y dar media vuelta."},
+{c:"Normas de circulación",q:"¿Está permitido estacionar sobre un paso de peatones?",o:["Sí, un máximo de dos minutos","No, está prohibido","Solo de noche"],a:1,e:"Está prohibido parar y estacionar en los pasos para peatones y para ciclistas."}
+];
+
+/* ---------- Estado ---------- */
+const EXAM_N=30, EXAM_SECS=30*60, MAX_ERR=3;
+const S={view:"home",mode:null,qs:[],ans:[],i:0,left:EXAM_SECS,tick:null,confirm:false,filter:"all",result:null};
+
+function store(key,val){try{if(val===undefined){return JSON.parse(localStorage.getItem(key)||"null")}localStorage.setItem(key,JSON.stringify(val))}catch(e){return null}}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function fmt(s){const m=Math.floor(s/60),x=s%60;return String(m).padStart(2,"0")+":"+String(x).padStart(2,"0")}
+function esc(t){return t.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const L=["A","B","C"];
+const app=document.getElementById("app");
+
+function start(mode){
+  clearInterval(S.tick);
+  S.mode=mode; S.view="quiz"; S.i=0; S.confirm=false; S.filter="all";
+  S.qs=shuffle(Q).slice(0,mode==="exam"?EXAM_N:Q.length);
+  S.ans=S.qs.map(()=>null);
+  S.left=EXAM_SECS;
+  if(mode==="exam"){
+    S.tick=setInterval(()=>{S.left--; const t=document.getElementById("timer"); if(t){t.textContent=fmt(S.left);t.classList.toggle("low",S.left<=300)} if(S.left<=0)finish();},1000);
+  }
+  render(); window.scrollTo(0,0);
+}
+
+function finish(){
+  clearInterval(S.tick);
+  const wrong=S.qs.reduce((n,q,k)=>n+(S.ans[k]!==q.a?1:0),0);
+  const ok=S.qs.length-wrong;
+  const pass=wrong<=MAX_ERR;
+  S.result={wrong,ok,pass,time:EXAM_SECS-S.left,blank:S.ans.filter(a=>a===null).length};
+  const h=store("tcb-history")||[];
+  h.unshift({d:new Date().toISOString(),wrong,pass,time:S.result.time});
+  store("tcb-history",h.slice(0,8));
+  S.view="result"; S.filter=wrong?"w":"all"; render(); window.scrollTo(0,0);
+}
+
+function home(){
+  const h=store("tcb-history")||[];
+  const passes=h.filter(x=>x.pass).length;
+  return `
+  <header class="brand"><div class="plate">B</div><div><h1>Test Carné B</h1><p>Simulador del examen teórico del permiso de conducir</p></div></header>
+  <section class="panel">
+    <div class="label">Cómo es el examen</div>
+    <div class="rules" style="margin-top:10px">
+      <div class="rule"><b>30</b><span>preguntas</span></div>
+      <div class="rule"><b>30</b><span>minutos</span></div>
+      <div class="rule"><b>3</b><span>fallos como máximo</span></div>
+    </div>
+    <div class="modes">
+      <button class="btn btn-primary" data-act="exam">Hacer examen<small>30 preguntas al azar y cronómetro</small></button>
+      <button class="btn btn-ghost" data-act="practice">Modo práctica<small>Las ${Q.length} preguntas con corrección al instante</small></button>
+    </div>
+  </section>
+  <section class="panel">
+    <div class="label">Tus últimos exámenes</div>
+    ${h.length?`<p class="note" style="margin-top:6px">${passes} aptos de ${h.length}</p><ul class="history">${h.map(x=>`<li><span>${new Date(x.d).toLocaleDateString("es-ES",{day:"numeric",month:"short"})} · ${fmt(x.time)}</span><span>${x.wrong} fallo${x.wrong===1?"":"s"} <span class="pill ${x.pass?"ok":"ko"}">${x.pass?"APTO":"NO APTO"}</span></span></li>`).join("")}</ul>`
+      :`<p class="note" style="margin-top:6px">Aún no has hecho ningún examen en este navegador. Tus resultados aparecerán aquí.</p>`}
+  </section>
+  <p class="note">Preguntas de práctica redactadas según el Reglamento General de Circulación vigente en 2026. No son las preguntas oficiales de la DGT.</p>`;
+}
+
+function quiz(){
+  const q=S.qs[S.i], a=S.ans[S.i], exam=S.mode==="exam";
+  const answered=S.ans.filter(x=>x!==null).length;
+  const show=!exam && a!==null;
+  const opts=q.o.map((t,k)=>{
+    let cls="opt";
+    if(show){ if(k===q.a)cls+=" right"; else if(k===a)cls+=" wrong"; }
+    else if(a===k)cls+=" sel";
+    return `<button class="${cls}" data-opt="${k}" ${show?"disabled":""}><span class="letter">${L[k]}</span><span>${esc(t)}</span></button>`;
+  }).join("");
+  const dots=S.qs.map((qq,k)=>{
+    let c="dot"; const v=S.ans[k];
+    if(!exam && v!==null)c+=v===qq.a?" r":" w"; else if(v!==null)c+=" done";
+    if(k===S.i)c+=" cur";
+    return `<button class="${c}" data-go="${k}" aria-label="Pregunta ${k+1}">${k+1}</button>`;
+  }).join("");
+  const last=S.i===S.qs.length-1;
+  return `
+  <div class="bar">
+    <button class="btn btn-ghost btn-small" data-act="home">Salir</button>
+    ${exam?`<div class="timer${S.left<=300?" low":""}" id="timer" aria-live="off">${fmt(S.left)}</div>`:`<div class="qnum">Práctica · ${S.ans.filter((v,k)=>v!==null&&v===S.qs[k].a).length} aciertos</div>`}
+    <button class="btn btn-primary btn-small" data-act="${exam?"ask":"finish"}">${exam?"Corregir":"Terminar"}</button>
+  </div>
+  <div class="progress"><i style="width:${answered/S.qs.length*100}%"></i></div>
+  ${S.confirm?`<div class="confirm"><strong>¿Corregir el examen ahora?</strong><span class="muted">Has respondido ${answered} de ${S.qs.length}. Las preguntas en blanco cuentan como fallo.</span><div class="row"><button class="btn btn-primary btn-small" data-act="finish">Sí, corregir</button><button class="btn btn-ghost btn-small" data-act="cancel">Seguir respondiendo</button></div></div>`:""}
+  <section class="panel">
+    <div class="qnum">Pregunta ${S.i+1} de ${S.qs.length} · ${q.c}</div>
+    <div class="qtext">${esc(q.q)}</div>
+    ${q.sign?`<div class="sign">${SIGNS[q.sign]}</div>`:""}
+    <div class="opts">${opts}</div>
+    ${show?`<div class="expl"><strong>${a===q.a?"¡Correcto!":"Incorrecto."}</strong> ${esc(q.e)}</div>`:""}
+    <div class="nav">
+      <button class="btn btn-ghost btn-small" data-act="prev" ${S.i===0?"disabled":""}>← Anterior</button>
+      ${last?`<button class="btn btn-primary btn-small" data-act="${exam?"ask":"finish"}">${exam?"Corregir examen":"Ver resultado"}</button>`
+            :`<button class="btn btn-primary btn-small" data-act="next">Siguiente →</button>`}
+    </div>
+  </section>
+  <section class="panel"><div class="label" style="margin-bottom:10px">Preguntas</div><div class="grid">${dots}</div></section>`;
+}
+
+function result(){
+  const r=S.result, exam=S.mode==="exam";
+  const items=S.qs.map((q,k)=>({q,k,v:S.ans[k]})).filter(x=>S.filter==="all"||(S.filter==="w"?x.v!==x.q.a:x.v===x.q.a));
+  return `
+  <header class="brand"><div class="plate">B</div><div><h1>${exam?"Resultado del examen":"Resultado de la práctica"}</h1><p>${exam?`Tiempo empleado: ${fmt(r.time)}`:`${S.qs.length} preguntas`}</p></div></header>
+  <section class="panel verdict ${r.pass?"ok":"ko"}">
+    ${exam?`<h2>${r.pass?"APTO":"NO APTO"}</h2><p>${r.pass?"Enhorabuena, has aprobado.":"Para aprobar necesitas 3 fallos o menos."}</p>`:`<h2>${Math.round(r.ok/S.qs.length*100)} %</h2><p>de aciertos</p>`}
+    <div class="score">
+      <div class="rule"><b style="color:var(--green)">${r.ok}</b><span>aciertos</span></div>
+      <div class="rule"><b style="color:var(--red)">${r.wrong-r.blank}</b><span>fallos</span></div>
+      <div class="rule"><b style="color:var(--muted)">${r.blank}</b><span>en blanco</span></div>
+    </div>
+    <div class="modes"><button class="btn btn-primary" data-act="exam">Nuevo examen</button><button class="btn btn-ghost" data-act="home">Volver al inicio</button></div>
+  </section>
+  <div class="tabs" role="group" aria-label="Filtrar corrección">
+    <button class="tab" data-f="w" aria-pressed="${S.filter==="w"}">Fallos y en blanco (${r.wrong})</button>
+    <button class="tab" data-f="r" aria-pressed="${S.filter==="r"}">Aciertos (${r.ok})</button>
+    <button class="tab" data-f="all" aria-pressed="${S.filter==="all"}">Todas</button>
+  </div>
+  <div class="review">${items.length?items.map(({q,k,v})=>`
+    <article class="ritem ${v===q.a?"r":"w"}">
+      <div class="qnum">${k+1} · ${q.c}</div>
+      <h3>${esc(q.q)}</h3>
+      ${q.sign?`<div class="sign" style="justify-content:flex-start"><svg style="width:64px;height:64px" viewBox="0 0 100 100">${SIGNS[q.sign].replace(/^<svg[^>]*>|<\/svg>$/g,"")}</svg></div>`:""}
+      ${v!==q.a?`<p style="color:var(--red)">Tu respuesta: ${v===null?"en blanco":L[v]+") "+esc(q.o[v])}</p>`:""}
+      <p style="color:var(--green)"><strong>Correcta: ${L[q.a]}) ${esc(q.o[q.a])}</strong></p>
+      <p class="muted">${esc(q.e)}</p>
+    </article>`).join(""):`<p class="note">No hay preguntas en este filtro.</p>`}</div>`;
+}
+
+function render(){
+  app.innerHTML=S.view==="home"?home():S.view==="quiz"?quiz():result();
+}
+
+app.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  if(b.dataset.opt!==undefined){
+    const k=+b.dataset.opt;
+    if(S.mode==="practice"&&S.ans[S.i]!==null)return;
+    S.ans[S.i]=k; render(); return;
+  }
+  if(b.dataset.go!==undefined){S.i=+b.dataset.go;S.confirm=false;render();return}
+  if(b.dataset.f){S.filter=b.dataset.f;render();return}
+  switch(b.dataset.act){
+    case "exam":start("exam");break;
+    case "practice":start("practice");break;
+    case "home":clearInterval(S.tick);S.view="home";render();break;
+    case "next":if(S.i<S.qs.length-1){S.i++;render();window.scrollTo(0,0)}break;
+    case "prev":if(S.i>0){S.i--;render();window.scrollTo(0,0)}break;
+    case "ask":S.confirm=true;render();window.scrollTo(0,0);break;
+    case "cancel":S.confirm=false;render();break;
+    case "finish":finish();break;
+  }
+});
+document.addEventListener("keydown",e=>{
+  if(S.view!=="quiz")return;
+  const m={a:0,b:1,c:2,"1":0,"2":1,"3":2}[e.key.toLowerCase()];
+  if(m!==undefined){const btn=app.querySelector(`[data-opt="${m}"]`); if(btn&&!btn.disabled)btn.click()}
+  if(e.key==="ArrowRight"&&S.i<S.qs.length-1){S.i++;render()}
+  if(e.key==="ArrowLeft"&&S.i>0){S.i--;render()}
+});
+render();
+</script>
+
+</body>
+</html>
