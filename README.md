@@ -2,7 +2,7 @@
 
 Simulador del examen teórico del permiso de conducir **clase B** (DGT, España).
 
-**Demo:** https://TU-USUARIO.github.io/test-carne-b/
+**Demo:** https://bycarloss.github.io/test-carne-b/
 
 ## Características
 
