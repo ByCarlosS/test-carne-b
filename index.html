@@ -115,6 +115,19 @@ button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
   .qtext{font-size:18px}
   .verdict h2{font-size:44px}
 }
+.btn-review{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:12px;background:var(--red-soft);color:var(--red)}
+.btn-review:disabled{opacity:.55;cursor:default}
+.btn-review .count{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.temas{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tema{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:baseline;text-align:left;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink)}
+.tema:hover{border-color:var(--blue)}
+.tema-name{font-weight:700;font-size:14px;line-height:1.3}
+.tema-meta{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.meter{grid-column:1/-1;height:4px;background:var(--line);border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--green)}
+.dot{font-family:var(--body)}
+.btn:disabled{opacity:.5;cursor:default}
+@media (max-width:480px){.temas{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -138,82 +151,263 @@ const SIGNS={
   finProhibiciones:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#111" stroke-width="3"/><line x1="22" y1="78" x2="78" y2="22" stroke="#111" stroke-width="3"/><line x1="18" y1="72" x2="72" y2="18" stroke="#111" stroke-width="3"/><line x1="28" y1="82" x2="82" y2="28" stroke="#111" stroke-width="3"/></svg>`
 };
 
-/* ---------- Banco de preguntas (normativa vigente a 2026) ---------- */
-const Q=[
-{c:"Velocidad",q:"¿Cuál es la velocidad máxima de un turismo en autopista o autovía?",o:["100 km/h","120 km/h","130 km/h"],a:1,e:"La velocidad genérica máxima para turismos y motocicletas en autopistas y autovías es de 120 km/h."},
-{c:"Velocidad",q:"En una carretera convencional, ¿a qué velocidad máxima puede circular un turismo?",o:["90 km/h","100 km/h","80 km/h"],a:0,e:"Desde 2019 el límite genérico en carreteras convencionales es de 90 km/h para turismos y motocicletas."},
-{c:"Velocidad",q:"En una vía urbana con un único carril por sentido de circulación, la velocidad máxima genérica es…",o:["50 km/h","40 km/h","30 km/h"],a:2,e:"Desde mayo de 2021, las vías urbanas de un solo carril por sentido tienen un límite genérico de 30 km/h."},
-{c:"Velocidad",q:"En una vía urbana con dos o más carriles por sentido, la velocidad máxima genérica es…",o:["50 km/h","60 km/h","30 km/h"],a:0,e:"Con dos o más carriles por sentido el límite genérico en ciudad es de 50 km/h."},
-{c:"Velocidad",q:"En una calle de plataforma única, donde calzada y acera están al mismo nivel, el límite es…",o:["30 km/h","20 km/h","10 km/h"],a:1,e:"En vías de plataforma única de calzada y acera el límite genérico es de 20 km/h."},
-{c:"Velocidad",q:"¿Puede un turismo superar la velocidad máxima de la vía para adelantar en una carretera convencional?",o:["Sí, hasta 20 km/h más","Sí, solo si adelanta a un camión","No, en ningún caso"],a:2,e:"La reforma de 2021 eliminó la posibilidad de superar en 20 km/h el límite para adelantar."},
-{c:"Velocidad",q:"En autopista, ¿cuál es la velocidad mínima a la que puede circular un turismo, salvo causa justificada?",o:["60 km/h","40 km/h","80 km/h"],a:0,e:"No se puede circular a menos de la mitad de la velocidad genérica de la vía: la mitad de 120 son 60 km/h."},
-{c:"Velocidad",sign:"v50",q:"¿Qué indica esta señal?",o:["Velocidad mínima obligatoria de 50 km/h","Velocidad máxima de 50 km/h","Velocidad aconsejada de 50 km/h"],a:1,e:"Círculo con borde rojo y número: prohíbe circular a más de la velocidad indicada. La mínima va en fondo azul y la aconsejada en rectángulo azul."},
-{c:"Alcohol y drogas",q:"La tasa máxima de alcohol para un conductor con permiso de más de dos años de antigüedad es…",o:["0,25 mg/l en aire espirado","0,15 mg/l en aire espirado","0,50 mg/l en aire espirado"],a:0,e:"Para conductores generales: 0,5 g/l en sangre o 0,25 mg/l en aire espirado."},
-{c:"Alcohol y drogas",q:"Un conductor novel (menos de dos años de permiso) no puede superar una tasa de alcohol en aire espirado de…",o:["0,25 mg/l","0,15 mg/l","0,00 mg/l"],a:1,e:"Noveles y profesionales: 0,3 g/l en sangre o 0,15 mg/l en aire espirado."},
-{c:"Alcohol y drogas",q:"Un medicamento con el pictograma de un coche dentro de un triángulo rojo en su envase indica que…",o:["Puede afectar a la capacidad de conducir","Está prohibido conducir durante un mes","Solo afecta a conductores profesionales"],a:0,e:"Ese pictograma avisa de que el fármaco puede alterar la capacidad para conducir. Lee el prospecto y consulta al médico."},
-{c:"Alcohol y drogas",q:"El alcohol, respecto al tiempo de reacción del conductor…",o:["Lo reduce","Lo aumenta","No lo modifica"],a:1,e:"El alcohol hace que tardemos más en reaccionar, así que aumenta la distancia recorrida antes de empezar a frenar."},
-{c:"Prioridad",q:"En una intersección sin señalizar, ¿quién tiene preferencia de paso?",o:["El vehículo que llega por la izquierda","El vehículo que llega por la derecha","El vehículo de mayor tamaño"],a:1,e:"Sin señalización, rige la norma general: preferencia para quien se aproxima por la derecha."},
-{c:"Prioridad",q:"En una glorieta, ¿quién tiene preferencia de paso por regla general?",o:["Los vehículos que van a entrar","Los vehículos que circulan dentro de la glorieta","Los que salen por la derecha"],a:1,e:"Salvo señalización en contra, tienen preferencia los vehículos que ya circulan por el anillo."},
-{c:"Prioridad",sign:"stop",q:"Ante esta señal, el conductor debe…",o:["Detenerse solo si vienen otros vehículos","Detenerse siempre en la línea y ceder el paso","Reducir la velocidad y ceder el paso"],a:1,e:"STOP obliga a detenerse siempre antes de la línea de detención, o antes de la intersección si no la hay, y ceder el paso."},
-{c:"Prioridad",sign:"ceda",q:"¿Qué obliga esta señal?",o:["A detenerse siempre","A ceder el paso a los vehículos de la vía a la que se aproxima","A ceder el paso solo a los peatones"],a:1,e:"Ceda el paso: solo hay que detenerse si es necesario para no obligar a frenar a quien tiene preferencia."},
-{c:"Prioridad",q:"¿Qué debe hacer si oye y ve acercarse una ambulancia con las señales luminosas y acústicas encendidas?",o:["Mantener la trayectoria y velocidad","Facilitarle el paso, apartándose a la derecha o deteniéndose si es necesario","Acelerar para no entorpecerla"],a:1,e:"Los vehículos prioritarios en servicio de urgencia tienen preferencia; hay que facilitar su paso con seguridad."},
-{c:"Prioridad",q:"Las indicaciones de un agente de tráfico, respecto a un semáforo en verde…",o:["Prevalecen sobre el semáforo","Solo se obedecen si el semáforo está apagado","Tienen el mismo valor"],a:0,e:"El orden de prioridad es: agentes, señalización circunstancial, semáforos, señales verticales y marcas viales."},
-{c:"Prioridad",q:"Al girar a la derecha hacia una calle, unos peatones la están cruzando. ¿Qué debe hacer?",o:["Pasar antes que ellos si va despacio","Cederles el paso","Avisarles con el claxon"],a:1,e:"Al girar hay que ceder el paso a los peatones que cruzan la calzada a la que se dirige, aunque no haya paso de peatones."},
-{c:"Señales",sign:"noAdelantar",q:"Esta señal indica…",o:["Adelantamiento prohibido","Fin de la prohibición de adelantar","Adelantamiento permitido solo a camiones"],a:0,e:"Prohíbe adelantar a vehículos de motor que no sean motocicletas de dos ruedas, desde la señal hasta la próxima intersección o la señal de fin."},
-{c:"Señales",sign:"entradaProhibida",q:"¿Qué significa esta señal?",o:["Circulación prohibida en ambos sentidos","Entrada prohibida a toda clase de vehículos","Calle cortada por obras"],a:1,e:"Círculo rojo con franja blanca horizontal: prohíbe la entrada a toda clase de vehículos, normalmente por ser sentido contrario."},
-{c:"Señales",sign:"circulacionProhibida",q:"¿Qué indica esta señal?",o:["Entrada prohibida solo a turismos","Circulación prohibida a toda clase de vehículos en ambos sentidos","Fin de todas las prohibiciones"],a:1,e:"Círculo blanco con borde rojo y sin símbolo: prohibida la circulación de vehículos en ambos sentidos."},
-{c:"Señales",sign:"noEstacionar",q:"Esta señal prohíbe…",o:["Parar y estacionar","Solo estacionar","Circular por el carril derecho"],a:1,e:"Con una sola franja roja prohíbe estacionar. Si lleva dos franjas en aspa prohíbe parar y estacionar."},
-{c:"Señales",sign:"noParar",q:"¿Qué prohíbe esta señal?",o:["Solo estacionar","La parada y el estacionamiento","Circular a vehículos pesados"],a:1,e:"Las dos franjas cruzadas prohíben tanto parar como estacionar en el lado de la vía donde se coloca."},
-{c:"Señales",sign:"obligatorioDerecha",q:"Esta señal significa…",o:["Sentido obligatorio hacia la derecha","Giro a la derecha prohibido","Carril derecho recomendado"],a:0,e:"Las señales circulares de fondo azul son de obligación: aquí, circular en el sentido indicado por la flecha."},
-{c:"Señales",sign:"curvaDerecha",q:"Esta señal avisa de…",o:["Obligación de girar a la derecha","Una curva peligrosa hacia la derecha","Carril de incorporación por la derecha"],a:1,e:"Las señales triangulares con borde rojo son de peligro. Esta advierte de una curva peligrosa hacia la derecha."},
-{c:"Señales",sign:"finProhibiciones",q:"¿Qué indica esta señal?",o:["Fin de todas las prohibiciones impuestas anteriormente","Zona de adelantamiento","Vía sin salida"],a:0,e:"Indica el final de las prohibiciones específicas señalizadas antes para los vehículos en movimiento."},
-{c:"Señales",q:"Un semáforo en amarillo fijo obliga a…",o:["Acelerar para pasar antes del rojo","Detenerse, salvo que no pueda hacerlo en condiciones de seguridad","Ceder el paso y continuar"],a:1,e:"El amarillo fijo significa detenerse como si fuera rojo, excepto si al encenderse ya está tan cerca que no puede parar con seguridad."},
-{c:"Señales",q:"Un semáforo en amarillo intermitente indica…",o:["Paso prohibido","Obligación de extremar la precaución y, en su caso, ceder el paso","Que el semáforo va a ponerse verde"],a:1,e:"El amarillo intermitente obliga a extremar la precaución y ceder el paso si fuera necesario."},
-{c:"Señales",q:"Una línea longitudinal continua en el centro de la calzada significa que…",o:["Se puede pisar para adelantar","Ningún conductor debe atravesarla ni circular sobre ella","Solo la pueden cruzar las motocicletas"],a:1,e:"La línea continua no debe pisarse ni atravesarse, salvo en situaciones puntuales como rebasar un obstáculo cuando lo permite la norma."},
-{c:"Adelantamiento",q:"Al adelantar a un ciclista en carretera, ¿qué separación lateral mínima debe dejar?",o:["1 metro","1,5 metros","0,5 metros"],a:1,e:"Hay que dejar al menos 1,5 m. En vías con más de un carril por sentido, hay que cambiar completamente de carril."},
-{c:"Adelantamiento",q:"¿Cuándo está permitido adelantar por la derecha?",o:["Nunca","Cuando el vehículo de delante indica claramente que va a girar a la izquierda","Siempre que haya espacio suficiente"],a:1,e:"Se adelanta por la izquierda como norma, pero por la derecha cuando el de delante señaliza e inicia un giro a la izquierda o se detiene para ello."},
-{c:"Adelantamiento",q:"Antes de iniciar un adelantamiento, lo primero es…",o:["Acelerar","Comprobar que hay espacio y visibilidad suficientes y que nadie le está adelantando","Tocar el claxon"],a:1,e:"Hay que asegurarse de que se puede completar la maniobra sin peligro: espacio, visibilidad y que nadie ha iniciado un adelantamiento a nuestro vehículo."},
-{c:"Seguridad vial",q:"Si su vehículo queda inmovilizado en la calzada, ¿qué dispositivo de señalización debe usar desde el 1 de enero de 2026?",o:["Los dos triángulos de emergencia","La baliza luminosa V-16 conectada","Solo las luces de emergencia"],a:1,e:"Desde 2026 la baliza V-16 conectada con la DGT sustituye a los triángulos. Se coloca en el techo sin necesidad de salir a la calzada."},
-{c:"Seguridad vial",q:"En un viaje largo, ¿cada cuánto conviene descansar?",o:["Cada 2 horas o 200 km aproximadamente","Cada 5 horas","Solo cuando se nota sueño"],a:0,e:"Se recomienda parar cada 2 horas o unos 200 km, porque la fatiga aparece antes de que la notemos."},
-{c:"Seguridad vial",q:"Si la velocidad se duplica, la distancia de frenado…",o:["Se duplica","Se multiplica aproximadamente por cuatro","Se mantiene igual"],a:1,e:"La distancia de frenado crece con el cuadrado de la velocidad: al doble de velocidad, unas cuatro veces más distancia."},
-{c:"Seguridad vial",q:"Circulando a 90 km/h, ¿cuántos metros recorre aproximadamente durante 1 segundo de tiempo de reacción?",o:["Unos 9 metros","Unos 25 metros","Unos 50 metros"],a:1,e:"90 km/h equivalen a 25 metros por segundo."},
-{c:"Seguridad vial",q:"Si nota que el coche hace aquaplaning, debe…",o:["Frenar a fondo","Soltar el acelerador sin frenar bruscamente y sujetar firme el volante","Girar el volante con fuerza"],a:1,e:"Hay que dejar que el neumático recupere adherencia: sin frenazos ni volantazos, soltando el acelerador."},
-{c:"Seguridad vial",q:"¿Qué distancia debe mantener con el vehículo de delante?",o:["Siempre 10 metros","La que le permita detenerse sin chocar si frena bruscamente","La mitad de su velocidad en metros"],a:1,e:"La norma exige una separación que permita detenerse en caso de frenado brusco, según velocidad, adherencia y condiciones."},
-{c:"Seguridad vial",q:"Los niños con una estatura igual o inferior a 135 cm deben viajar…",o:["En el asiento delantero con cinturón","En los asientos traseros, con un sistema de retención infantil homologado adecuado","En cualquier asiento, sin sistema de retención si el trayecto es urbano"],a:1,e:"Por regla general, van detrás y en un sistema de retención homologado. Hay excepciones tasadas, como que los asientos traseros estén ocupados por otros menores."},
-{c:"Seguridad vial",q:"Una silla infantil a contramarcha colocada en el asiento delantero exige…",o:["Desactivar el airbag frontal del acompañante","Llevar el airbag activado","Nada especial"],a:0,e:"Si el airbag frontal se activa, puede golpear la silla y causar lesiones graves al niño."},
-{c:"Seguridad vial",q:"El sistema ABS sirve para…",o:["Frenar en menos metros en cualquier situación","Evitar el bloqueo de las ruedas y poder mantener el control de la dirección al frenar","Controlar la tracción al acelerar"],a:1,e:"El ABS impide que las ruedas se bloqueen, así el conductor puede seguir dirigiendo el coche durante una frenada fuerte."},
-{c:"Alumbrado",q:"¿Es obligatorio llevar encendida la luz de cruce al circular por un túnel?",o:["Solo si está mal iluminado","Sí, siempre","No, basta con las de posición"],a:1,e:"En túneles y pasos inferiores señalizados es obligatorio encender la luz de cruce, aunque estén iluminados."},
-{c:"Alumbrado",q:"La luz antiniebla trasera puede usarse…",o:["Siempre que llueva","Con niebla espesa, lluvia muy intensa, nevada o nubes densas de polvo o humo","Por la noche en vías interurbanas"],a:1,e:"Solo en condiciones meteorológicas o ambientales especialmente desfavorables, porque deslumbra a quien va detrás."},
-{c:"Alumbrado",q:"Circulando de noche con luz de carretera (largas), al cruzarse con otro vehículo debe…",o:["Mantenerla encendida","Cambiar a luz de cruce para no deslumbrar","Apagar todas las luces un momento"],a:1,e:"Hay que cambiar a luz de cruce ante un vehículo que se aproxima en sentido contrario o al que sigue de cerca."},
-{c:"Permiso y puntos",q:"¿Con cuántos puntos empieza un conductor novel?",o:["12 puntos","8 puntos","10 puntos"],a:1,e:"Los noveles comienzan con 8 puntos. Si no pierden ninguno en dos años, pasan a 12."},
-{c:"Permiso y puntos",q:"Conducir sujetando el teléfono móvil con la mano supone la pérdida de…",o:["3 puntos","6 puntos","4 puntos"],a:1,e:"Desde marzo de 2022, sujetar el móvil con la mano mientras se conduce resta 6 puntos, además de la multa de 200 €."},
-{c:"Permiso y puntos",q:"No utilizar el cinturón de seguridad conlleva la pérdida de…",o:["2 puntos","3 puntos","4 puntos"],a:2,e:"Desde 2022, no usar o usar mal el cinturón, el casco o los sistemas de retención infantil resta 4 puntos."},
-{c:"Permiso y puntos",q:"El permiso de clase B autoriza a conducir turismos con una masa máxima autorizada de hasta…",o:["3.500 kg","4.250 kg","2.500 kg"],a:0,e:"El permiso B permite conducir automóviles de hasta 3.500 kg de MMA y hasta 9 plazas, incluida la del conductor."},
-{c:"Permiso y puntos",q:"Con el permiso B, ¿qué remolque se puede enganchar sin requisitos adicionales?",o:["Uno de hasta 750 kg de MMA","Cualquier remolque","Solo caravanas"],a:0,e:"Con el B se puede llevar un remolque ligero de hasta 750 kg de MMA. Para más peso puede necesitarse el B96 o el BE."},
-{c:"Permiso y puntos",q:"¿Qué edad mínima se exige para obtener el permiso de clase B?",o:["17 años","18 años","21 años"],a:1,e:"La edad mínima para el permiso B es de 18 años."},
-{c:"Vehículo",q:"¿Cuál es la profundidad mínima legal del dibujo de los neumáticos de un turismo?",o:["1 mm","1,6 mm","3 mm"],a:1,e:"La profundidad mínima en las ranuras principales es de 1,6 mm, aunque se recomienda cambiarlos antes."},
-{c:"Vehículo",q:"Un turismo de uso particular debe pasar su primera ITV cuando cumple…",o:["2 años","4 años","5 años"],a:1,e:"Primera ITV a los 4 años, después cada 2 años hasta los 10 y, desde entonces, cada año."},
-{c:"Vehículo",q:"¿Qué seguro es obligatorio para circular con un vehículo a motor?",o:["El seguro a todo riesgo","El seguro de responsabilidad civil","El seguro de lunas"],a:1,e:"El seguro obligatorio cubre la responsabilidad civil por los daños causados a terceros."},
-{c:"Normas de circulación",q:"En una autovía de tres carriles por sentido y con poco tráfico, ¿por qué carril debe circular normalmente?",o:["Por el central","Por el de la derecha","Por el de la izquierda"],a:1,e:"Se circula por el carril de la derecha y se usan los demás para adelantar, salvo que la densidad del tráfico lo justifique."},
-{c:"Normas de circulación",q:"En una autopista, ¿está permitido circular marcha atrás?",o:["Sí, si se ha pasado la salida","No, está prohibido","Solo por el arcén"],a:1,e:"En autopistas y autovías está prohibido circular marcha atrás y dar media vuelta."},
-{c:"Normas de circulación",q:"¿Está permitido estacionar sobre un paso de peatones?",o:["Sí, un máximo de dos minutos","No, está prohibido","Solo de noche"],a:1,e:"Está prohibido parar y estacionar en los pasos para peatones y para ciclistas."}
+/* ---------- Banco de preguntas por temas (normativa vigente a 2026) ----------
+   Formato: {q: pregunta, o: [opciones], a: índice correcto, e: explicación, sign?: clave de SIGNS} */
+const TEMAS = [
+{t:"Tipos de vehículos", qs:[
+{q:"¿Cuántas plazas, incluida la del conductor, puede tener como máximo un turismo?",o:["7 plazas","9 plazas","8 plazas"],a:1,e:"Un turismo es un automóvil destinado al transporte de personas con un máximo de 9 plazas, incluido el conductor."},
+{q:"¿Cuál es la velocidad máxima por construcción de un ciclomotor?",o:["45 km/h","50 km/h","60 km/h"],a:0,e:"Los ciclomotores no pueden superar por construcción los 45 km/h."},
+{q:"Un patinete eléctrico (vehículo de movilidad personal) tiene una velocidad máxima por construcción de…",o:["Entre 6 y 25 km/h","Hasta 45 km/h","Hasta 15 km/h"],a:0,e:"Los vehículos de movilidad personal tienen una velocidad máxima por construcción de entre 6 y 25 km/h."},
+{q:"¿Pueden circular los patinetes eléctricos por las aceras?",o:["Sí, a paso de peatón","No, está prohibido","Sí, si no hay carril bici"],a:1,e:"Los vehículos de movilidad personal no pueden circular por aceras ni zonas peatonales."},
+{q:"Con el permiso B y más de 3 años de antigüedad, en España se pueden conducir motocicletas de hasta…",o:["125 cc y 11 kW","250 cc","500 cc y 35 kW"],a:0,e:"El permiso B con más de 3 años de antigüedad autoriza a conducir en España motocicletas de hasta 125 cc y 11 kW."},
+{q:"La masa máxima autorizada (MMA) de un vehículo es…",o:["Su masa en vacío","La mayor masa con la que se le permite circular","La masa de la carga que puede llevar"],a:1,e:"La MMA es la mayor masa en carga con la que se permite circular a un vehículo."},
+{q:"La tara de un vehículo es su masa…",o:["Con conductor y pasajeros","Sin personal, pasajeros ni carga, con su dotación de combustible, agua y herramientas","Con la carga máxima"],a:1,e:"La tara es la masa del vehículo con su equipo fijo y dotación completa (combustible, agua, repuestos), sin personas ni carga."},
+{q:"Un turismo eléctrico de batería lleva la etiqueta ambiental…",o:["ECO","C (verde)","0 emisiones (azul)"],a:2,e:"Los eléctricos de batería, de autonomía extendida, de pila de combustible y los híbridos enchufables con 40 km de autonomía eléctrica o más llevan la etiqueta 0 emisiones."},
+{q:"Un remolque ligero es el que tiene una MMA no superior a…",o:["500 kg","750 kg","1.000 kg"],a:1,e:"Se considera remolque ligero el de MMA no superior a 750 kg."},
+{q:"Con el permiso B se puede llevar un remolque de más de 750 kg si…",o:["La MMA del conjunto no supera los 3.500 kg","El remolque tiene frenos","Nunca"],a:0,e:"Con el permiso B se puede arrastrar un remolque de más de 750 kg siempre que la MMA del conjunto no supere los 3.500 kg."},
+{q:"Un cuadriciclo ligero puede conducirse con el permiso…",o:["A1","AM","Solo con el B"],a:1,e:"Los ciclomotores y cuadriciclos ligeros se conducen con el permiso AM, que también está incluido en el B."}
+]},
+{t:"Uso de las vías públicas", qs:[
+{q:"En una autovía de tres carriles por sentido y con poco tráfico, ¿por qué carril debe circular normalmente?",o:["Por el central","Por el de la derecha","Por el de la izquierda"],a:1,e:"Se circula por el carril de la derecha y se usan los demás para adelantar, salvo que la densidad del tráfico lo justifique."},
+{q:"En una autopista, ¿está permitido circular marcha atrás?",o:["Sí, si se ha pasado la salida","No, está prohibido","Solo por el arcén"],a:1,e:"En autopistas y autovías está prohibido circular marcha atrás y dar media vuelta."},
+{q:"Por regla general, ¿puede un turismo circular por el arcén?",o:["Sí, para dejar pasar a otros","No, salvo por razones de emergencia","Sí, a menos de 40 km/h"],a:1,e:"Los turismos no deben circular por el arcén salvo por razones de emergencia."},
+{q:"Si el arcén de una carretera es transitable, las bicicletas deben circular…",o:["Por el arcén de la derecha","Por el centro del carril","Por donde prefieran"],a:0,e:"Las bicicletas están obligadas a circular por el arcén de su derecha si es transitable y suficiente."},
+{q:"¿Pueden circular bicicletas por el arcén de una autovía?",o:["No, nunca","Sí, si el ciclista es mayor de 14 años y no lo prohíbe una señal","Solo de día"],a:1,e:"Los ciclistas mayores de 14 años pueden circular por el arcén de las autovías, salvo que una señal lo prohíba."},
+{q:"Un carril VAO está reservado a…",o:["Vehículos de alta ocupación, con el número mínimo de ocupantes que se indique","Vehículos de emergencia","Vehículos pesados"],a:0,e:"VAO significa Vehículos de Alta Ocupación: pueden usarlo los que lleven el número mínimo de ocupantes señalizado, además de otros autorizados."},
+{q:"El carril de aceleración sirve para…",o:["Adelantar","Alcanzar la velocidad adecuada para incorporarse a la vía","Detenerse antes de entrar"],a:1,e:"El carril de aceleración permite ganar velocidad para incorporarse con seguridad a la circulación."},
+{q:"En una vía de doble sentido con tres carriles separados por líneas discontinuas, el carril central se usa…",o:["Para circular normalmente","Solo para adelantar o girar a la izquierda","Solo por vehículos lentos"],a:1,e:"En ese tipo de vía el carril central solo puede usarse para adelantar o para girar a la izquierda."},
+{q:"En poblado, con dos o más carriles en el mismo sentido delimitados por marcas, puede usar…",o:["Solo el de la derecha","El que mejor convenga a su destino","Solo el de la izquierda"],a:1,e:"En poblado puede usar el carril que mejor convenga a su destino, pero no debe cambiar de carril sin motivo."},
+{q:"¿Qué distancia debe mantener con el vehículo de delante?",o:["Siempre 10 metros","La que le permita detenerse sin chocar si frena bruscamente","La mitad de su velocidad en metros"],a:1,e:"La norma exige una separación que permita detenerse en caso de frenado brusco, según velocidad, adherencia y condiciones."},
+{q:"Si al circular por una vía se encuentra con un atasco en un cruce con el semáforo en verde, debe…",o:["Entrar en el cruce para no perder el turno","No entrar si puede quedar detenido obstaculizando la circulación transversal","Tocar el claxon"],a:1,e:"No se debe entrar en una intersección si es previsible quedar inmovilizado dentro, aunque el semáforo lo permita."}
+]},
+{t:"Velocidad", qs:[
+{q:"¿Cuál es la velocidad máxima de un turismo en autopista o autovía?",o:["100 km/h","120 km/h","130 km/h"],a:1,e:"La velocidad genérica máxima para turismos y motocicletas en autopistas y autovías es de 120 km/h."},
+{q:"En una carretera convencional, ¿a qué velocidad máxima puede circular un turismo?",o:["90 km/h","100 km/h","80 km/h"],a:0,e:"Desde 2019 el límite genérico en carreteras convencionales es de 90 km/h para turismos y motocicletas."},
+{q:"En una vía urbana con un único carril por sentido de circulación, la velocidad máxima genérica es…",o:["50 km/h","40 km/h","30 km/h"],a:2,e:"Desde mayo de 2021, las vías urbanas de un solo carril por sentido tienen un límite genérico de 30 km/h."},
+{q:"En una vía urbana con dos o más carriles por sentido, la velocidad máxima genérica es…",o:["50 km/h","60 km/h","30 km/h"],a:0,e:"Con dos o más carriles por sentido el límite genérico en ciudad es de 50 km/h."},
+{q:"En una calle de plataforma única, donde calzada y acera están al mismo nivel, el límite es…",o:["30 km/h","20 km/h","10 km/h"],a:1,e:"En vías de plataforma única de calzada y acera el límite genérico es de 20 km/h."},
+{q:"¿Puede un turismo superar la velocidad máxima de la vía para adelantar en una carretera convencional?",o:["Sí, hasta 20 km/h más","Sí, solo si adelanta a un camión","No, en ningún caso"],a:2,e:"La reforma de 2021 eliminó la posibilidad de superar en 20 km/h el límite para adelantar."},
+{q:"En autopista, ¿cuál es la velocidad mínima a la que puede circular un turismo, salvo causa justificada?",o:["60 km/h","40 km/h","80 km/h"],a:0,e:"No se puede circular a menos de la mitad de la velocidad genérica de la vía: la mitad de 120 son 60 km/h."},
+{q:"En una carretera convencional, la velocidad mínima de un turismo, salvo causa justificada, es…",o:["45 km/h","60 km/h","30 km/h"],a:0,e:"La mínima es la mitad de la genérica de la vía: la mitad de 90 km/h son 45 km/h."},
+{q:"¿Cuál es la velocidad máxima de un turismo que arrastra un remolque en una autovía?",o:["120 km/h","100 km/h","90 km/h"],a:2,e:"Los automóviles con remolque tienen un límite de 90 km/h en autopistas y autovías y de 80 km/h en carreteras convencionales."},
+{sign:"v50",q:"¿Qué indica esta señal?",o:["Velocidad mínima obligatoria de 50 km/h","Velocidad máxima de 50 km/h","Velocidad aconsejada de 50 km/h"],a:1,e:"Círculo con borde rojo y número: prohíbe circular a más de la velocidad indicada. La mínima va en fondo azul y la aconsejada en rectángulo azul."},
+{q:"Una señal circular de fondo azul con el número 60 indica…",o:["Velocidad máxima de 60 km/h","Velocidad mínima obligatoria de 60 km/h","Velocidad aconsejada de 60 km/h"],a:1,e:"Las señales circulares azules son de obligación: con un número, obligan a circular al menos a esa velocidad."},
+{q:"Un radar de tramo mide…",o:["La velocidad en un punto concreto","La velocidad media entre dos puntos","La distancia con el vehículo de delante"],a:1,e:"El radar de tramo calcula la velocidad media con el tiempo que se tarda en recorrer la distancia entre dos puntos."},
+{q:"Circular a más de 60 km/h por encima del límite en vía urbana es…",o:["Una infracción leve","Una infracción grave","Un delito"],a:2,e:"El Código Penal castiga superar en más de 60 km/h el límite en vía urbana o en más de 80 km/h en vía interurbana."},
+{q:"Debe moderar la velocidad y, si es preciso, detenerse…",o:["Al aproximarse a un paso de peatones cuando hay peatones que van a cruzar","Solo cuando lo indique un semáforo","Solo en autopista"],a:0,e:"Hay que adecuar la velocidad y detenerse si hace falta ante peatones que cruzan o van a cruzar."}
+]},
+{t:"Maniobras", qs:[
+{q:"Al adelantar a un ciclista en carretera, ¿qué separación lateral mínima debe dejar?",o:["1 metro","1,5 metros","0,5 metros"],a:1,e:"Hay que dejar al menos 1,5 m. En vías con más de un carril por sentido, hay que cambiar completamente de carril."},
+{q:"¿Cuándo está permitido adelantar por la derecha?",o:["Nunca","Cuando el vehículo de delante indica claramente que va a girar a la izquierda","Siempre que haya espacio suficiente"],a:1,e:"Se adelanta por la izquierda como norma, pero por la derecha cuando el de delante señaliza e inicia un giro a la izquierda o se detiene para ello."},
+{q:"Antes de iniciar un adelantamiento, lo primero es…",o:["Acelerar","Comprobar que hay espacio y visibilidad suficientes y que nadie le está adelantando","Tocar el claxon"],a:1,e:"Hay que asegurarse de que se puede completar la maniobra sin peligro: espacio, visibilidad y que nadie ha iniciado un adelantamiento a nuestro vehículo."},
+{q:"Cuando otro vehículo le está adelantando, usted debe…",o:["Ceñirse a la derecha y no aumentar la velocidad","Acelerar para facilitar la maniobra","Frenar bruscamente"],a:0,e:"El conductor adelantado debe apartarse todo lo posible a la derecha y no aumentar la velocidad."},
+{q:"¿Está permitido adelantar en una curva de visibilidad reducida?",o:["Sí, si el vehículo de delante va lento","No, salvo que la maniobra se pueda hacer sin invadir el sentido contrario","Sí, tocando el claxon"],a:1,e:"En curvas y cambios de rasante de visibilidad reducida está prohibido adelantar invadiendo el sentido contrario."},
+{q:"Para girar a la izquierda en una vía de doble sentido, debe colocarse…",o:["Lo más a la derecha posible","Lo más cerca posible del eje central de la calzada","En el arcén"],a:1,e:"Para girar a la izquierda hay que ceñirse al centro de la calzada sin invadir el sentido contrario."},
+{q:"La marcha atrás está permitida como maniobra complementaria con un recorrido máximo de…",o:["15 metros","50 metros","5 metros"],a:0,e:"La marcha atrás no puede superar los 15 metros ni invadir un cruce de vías."},
+{q:"¿Qué es una parada?",o:["Inmovilizar el vehículo menos de 2 minutos sin que el conductor lo abandone","Inmovilizar el vehículo por cualquier tiempo","Detenerse por un semáforo"],a:0,e:"La parada es una inmovilización de hasta 2 minutos sin que el conductor abandone el vehículo."},
+{q:"¿Está permitido estacionar en doble fila?",o:["Sí, con las luces de emergencia","No, está prohibido","Sí, un máximo de 5 minutos"],a:1,e:"Estacionar en doble fila está prohibido. Las luces de emergencia no lo hacen legal."},
+{q:"¿Puede parar en un carril reservado para autobuses?",o:["Sí, si es un momento","No, está prohibido","Solo de noche"],a:1,e:"Está prohibido parar y estacionar en los carriles reservados al transporte público."},
+{q:"¿Está permitido estacionar sobre un paso de peatones?",o:["Sí, un máximo de dos minutos","No, está prohibido","Solo de noche"],a:1,e:"Está prohibido parar y estacionar en los pasos para peatones y para ciclistas."},
+{q:"Al salir de un estacionamiento para incorporarse a la circulación, debe…",o:["Tener preferencia por salir señalizando","Ceder el paso a los vehículos que circulan por la vía","Tocar el claxon y salir"],a:1,e:"Quien se incorpora a la circulación debe ceder el paso a los que ya circulan por la vía."},
+{q:"¿Dónde está prohibido cambiar de sentido?",o:["En los pasos a nivel, túneles y curvas de visibilidad reducida","En las glorietas","En las calles de doble sentido"],a:0,e:"Está prohibido cambiar de sentido donde la visibilidad sea insuficiente, en pasos a nivel, túneles y donde lo prohíba una señal."}
+]},
+{t:"Prioridad de paso", qs:[
+{q:"En una intersección sin señalizar, ¿quién tiene preferencia de paso?",o:["El vehículo que llega por la izquierda","El vehículo que llega por la derecha","El vehículo de mayor tamaño"],a:1,e:"Sin señalización, rige la norma general: preferencia para quien se aproxima por la derecha."},
+{q:"En una glorieta, ¿quién tiene preferencia de paso por regla general?",o:["Los vehículos que van a entrar","Los vehículos que circulan dentro de la glorieta","Los que salen por la derecha"],a:1,e:"Salvo señalización en contra, tienen preferencia los vehículos que ya circulan por el anillo."},
+{sign:"stop",q:"Ante esta señal, el conductor debe…",o:["Detenerse solo si vienen otros vehículos","Detenerse siempre en la línea y ceder el paso","Reducir la velocidad y ceder el paso"],a:1,e:"STOP obliga a detenerse siempre antes de la línea de detención, o antes de la intersección si no la hay, y ceder el paso."},
+{sign:"ceda",q:"¿Qué obliga esta señal?",o:["A detenerse siempre","A ceder el paso a los vehículos de la vía a la que se aproxima","A ceder el paso solo a los peatones"],a:1,e:"Ceda el paso: solo hay que detenerse si es necesario para no obligar a frenar a quien tiene preferencia."},
+{q:"¿Qué debe hacer si oye y ve acercarse una ambulancia con las señales luminosas y acústicas encendidas?",o:["Mantener la trayectoria y velocidad","Facilitarle el paso, apartándose a la derecha o deteniéndose si es necesario","Acelerar para no entorpecerla"],a:1,e:"Los vehículos prioritarios en servicio de urgencia tienen preferencia; hay que facilitar su paso con seguridad."},
+{q:"Las indicaciones de un agente de tráfico, respecto a un semáforo en verde…",o:["Prevalecen sobre el semáforo","Solo se obedecen si el semáforo está apagado","Tienen el mismo valor"],a:0,e:"El orden de prioridad es: agentes, señalización circunstancial, semáforos, señales verticales y marcas viales."},
+{q:"Al girar a la derecha hacia una calle, unos peatones la están cruzando. ¿Qué debe hacer?",o:["Pasar antes que ellos si va despacio","Cederles el paso","Avisarles con el claxon"],a:1,e:"Al girar hay que ceder el paso a los peatones que cruzan la calzada a la que se dirige, aunque no haya paso de peatones."},
+{q:"En un tramo estrecho sin señalizar donde no caben dos vehículos, ¿quién tiene preferencia?",o:["El que haya entrado primero en el tramo","El vehículo más grande","El que circula por la derecha"],a:0,e:"Sin señalización, tiene preferencia el vehículo que haya entrado primero en el estrechamiento."},
+{q:"En un tramo estrecho de gran pendiente sin señalizar, tiene preferencia por regla general…",o:["El que baja","El que sube","El más rápido"],a:1,e:"Tiene preferencia el vehículo que circula en sentido ascendente, salvo que el que baja pueda llegar antes a un apartadero."},
+{q:"Si sale de un garaje a la vía pública, debe…",o:["Ceder el paso a los vehículos y peatones","Tener preferencia por estar ya en marcha","Tocar el claxon y salir"],a:0,e:"Quien sale de un inmueble, garaje o aparcamiento debe ceder el paso a los usuarios de la vía."},
+{q:"En una intersección sin señalizar entre una vía pavimentada y un camino de tierra, tiene preferencia…",o:["Quien viene por la derecha, siempre","El vehículo que circula por la vía pavimentada","El vehículo que circula por el camino de tierra"],a:1,e:"Los vehículos que circulan por una vía pavimentada tienen preferencia sobre los que vienen de una vía sin pavimentar."},
+{q:"Los vehículos que circulan sobre raíles, como el tranvía, en una intersección sin señalizar…",o:["Tienen preferencia de paso","Deben ceder el paso a los que vienen por la derecha","Deben detenerse siempre"],a:0,e:"Los vehículos que circulan sobre raíles tienen preferencia de paso sobre los demás."},
+{q:"Si un grupo de ciclistas ya ha empezado a cruzar una intersección…",o:["Solo tiene preferencia el primero","Todo el grupo tiene preferencia, porque se considera una única unidad","Pierden la preferencia los últimos"],a:1,e:"Un grupo de ciclistas se considera una unidad móvil a efectos de prioridad cuando el primero ha iniciado el cruce."}
+]},
+{t:"Transporte de personas y mercancías", qs:[
+{q:"Los niños con una estatura igual o inferior a 135 cm deben viajar…",o:["En el asiento delantero con cinturón","En los asientos traseros, con un sistema de retención infantil homologado adecuado","En cualquier asiento, sin sistema de retención si el trayecto es urbano"],a:1,e:"Por regla general, van detrás y en un sistema de retención homologado. Hay excepciones tasadas, como que los asientos traseros estén ocupados por otros menores."},
+{q:"Una silla infantil a contramarcha colocada en el asiento delantero exige…",o:["Desactivar el airbag frontal del acompañante","Llevar el airbag activado","Nada especial"],a:0,e:"Si el airbag frontal se activa, puede golpear la silla y causar lesiones graves al niño."},
+{q:"En un turismo, la carga puede sobresalir por la parte posterior hasta…",o:["Un 10 % de su longitud (15 % si es indivisible)","2 metros siempre","No puede sobresalir nada"],a:0,e:"En turismos la carga puede sobresalir por detrás hasta un 10 % de la longitud del vehículo, o un 15 % si es indivisible."},
+{q:"La carga que sobresale por detrás de un turismo debe señalizarse con…",o:["Un trapo rojo","La señal V-20, un panel cuadrado con franjas rojas y blancas","Las luces de emergencia"],a:1,e:"La carga saliente se señaliza con la V-20, un panel de franjas diagonales rojas y blancas."},
+{q:"Una mascota que viaja en el coche debe ir…",o:["Suelta en el asiento trasero","Sujeta o separada de forma que no moleste al conductor","En brazos del acompañante"],a:1,e:"Los animales deben ir colocados de manera que no interfieran con el conductor. Lo más seguro es un transportín, arnés o rejilla."},
+{q:"¿Es obligatorio el cinturón en los asientos traseros?",o:["Solo en carretera","Sí, siempre que el vehículo lo tenga","No, solo en los delanteros"],a:1,e:"El cinturón es obligatorio en todos los asientos que lo tengan, en ciudad y en carretera."},
+{q:"¿Están exentas las embarazadas de usar el cinturón de seguridad?",o:["Sí, siempre","No, deben usarlo con la banda inferior por debajo del vientre","Solo a partir del sexto mes"],a:1,e:"Las embarazadas deben usar el cinturón. La banda inferior va por debajo del vientre, sobre las caderas."},
+{q:"¿Cuál es, por regla general, la edad mínima para viajar como pasajero en una motocicleta?",o:["10 años","12 años","16 años"],a:1,e:"Por regla general, a partir de 12 años. A partir de 7 se permite si conduce el padre, la madre, el tutor o una persona autorizada y el niño lleva casco."},
+{q:"¿Qué es el sistema ISOFIX?",o:["Un tipo de airbag","Un sistema de anclaje estandarizado para las sillas infantiles","Un control de estabilidad"],a:1,e:"ISOFIX es un sistema de anclaje rígido a la carrocería que reduce los errores de instalación de las sillas infantiles."},
+{q:"La carga de un vehículo debe ir colocada de forma que…",o:["No pueda caer, arrastrar ni tapar las luces o la matrícula","Ocupe todo el espacio disponible","Sobresalga por los laterales"],a:0,e:"La carga debe ir sujeta, sin comprometer la estabilidad ni ocultar luces, señales o placa de matrícula."},
+{q:"¿Puede llevar más personas que plazas tiene el vehículo?",o:["Sí, si son niños","No, el número de ocupantes no puede superar el de plazas","Sí, en trayectos cortos"],a:1,e:"No se puede transportar a más personas que plazas autorizadas tenga el vehículo."}
+]},
+{t:"Alumbrado y señalización óptica", qs:[
+{q:"¿Es obligatorio llevar encendida la luz de cruce al circular por un túnel?",o:["Solo si está mal iluminado","Sí, siempre","No, basta con las de posición"],a:1,e:"En túneles y pasos inferiores señalizados es obligatorio encender la luz de cruce, aunque estén iluminados."},
+{q:"La luz antiniebla trasera puede usarse…",o:["Siempre que llueva","Con niebla espesa, lluvia muy intensa, nevada o nubes densas de polvo o humo","Por la noche en vías interurbanas"],a:1,e:"Solo en condiciones meteorológicas o ambientales especialmente desfavorables, porque deslumbra a quien va detrás."},
+{q:"Circulando de noche con luz de carretera (largas), al cruzarse con otro vehículo debe…",o:["Mantenerla encendida","Cambiar a luz de cruce para no deslumbrar","Apagar todas las luces un momento"],a:1,e:"Hay que cambiar a luz de cruce ante un vehículo que se aproxima en sentido contrario o al que sigue de cerca."},
+{q:"Las motocicletas deben llevar encendida la luz de cruce…",o:["Solo de noche","Siempre, de día y de noche","Solo en carretera"],a:1,e:"Las motocicletas deben circular siempre con la luz de cruce encendida."},
+{q:"¿Puede usar la luz de carretera (largas) en una vía urbana bien iluminada?",o:["Sí","No","Solo si no hay tráfico"],a:1,e:"Está prohibido usar la luz de largo alcance en vías urbanas o interurbanas suficientemente iluminadas."},
+{q:"La luz antiniebla delantera, además de con niebla o lluvia intensa, puede usarse…",o:["En tramos de vías estrechas con muchas curvas","Siempre de noche","Para adelantar"],a:0,e:"Se permite en vías estrechas con muchas curvas, además de en condiciones de niebla, lluvia intensa, nevada o humo."},
+{q:"Las luces de emergencia pueden usarse para…",o:["Estacionar en doble fila","Advertir de una retención o de que el vehículo está inmovilizado","Circular despacio por la ciudad"],a:1,e:"Se usan para señalizar un vehículo inmovilizado o para avisar a los de atrás de un frenazo o una retención."},
+{q:"En poblado, ¿cuándo se puede usar el claxon?",o:["Para saludar","Solo para evitar un accidente","Para avisar de que va a adelantar"],a:1,e:"En poblado las señales acústicas están prohibidas salvo para evitar un posible accidente."},
+{q:"Si otro vehículo le deslumbra de noche, debe…",o:["Devolverle las largas","Reducir la velocidad y mirar hacia el borde derecho de la calzada","Cerrar los ojos un instante"],a:1,e:"Hay que reducir la velocidad, incluso detenerse, y desviar la mirada hacia el borde derecho de la vía."},
+{q:"Fuera de poblado, para avisar al conductor que va a adelantar, puede usar…",o:["Destellos con las luces","Las luces antiniebla","Las luces de emergencia"],a:0,e:"Fuera de poblado se pueden sustituir las señales acústicas por destellos luminosos para advertir del adelantamiento."}
+]},
+{t:"Señales de circulación", qs:[
+{sign:"noAdelantar",q:"Esta señal indica…",o:["Adelantamiento prohibido","Fin de la prohibición de adelantar","Adelantamiento permitido solo a camiones"],a:0,e:"Prohíbe adelantar a vehículos de motor que no sean motocicletas de dos ruedas, desde la señal hasta la próxima intersección o la señal de fin."},
+{sign:"entradaProhibida",q:"¿Qué significa esta señal?",o:["Circulación prohibida en ambos sentidos","Entrada prohibida a toda clase de vehículos","Calle cortada por obras"],a:1,e:"Círculo rojo con franja blanca horizontal: prohíbe la entrada a toda clase de vehículos, normalmente por ser sentido contrario."},
+{sign:"circulacionProhibida",q:"¿Qué indica esta señal?",o:["Entrada prohibida solo a turismos","Circulación prohibida a toda clase de vehículos en ambos sentidos","Fin de todas las prohibiciones"],a:1,e:"Círculo blanco con borde rojo y sin símbolo: prohibida la circulación de vehículos en ambos sentidos."},
+{sign:"noEstacionar",q:"Esta señal prohíbe…",o:["Parar y estacionar","Solo estacionar","Circular por el carril derecho"],a:1,e:"Con una sola franja roja prohíbe estacionar. Si lleva dos franjas en aspa prohíbe parar y estacionar."},
+{sign:"noParar",q:"¿Qué prohíbe esta señal?",o:["Solo estacionar","La parada y el estacionamiento","Circular a vehículos pesados"],a:1,e:"Las dos franjas cruzadas prohíben tanto parar como estacionar en el lado de la vía donde se coloca."},
+{sign:"obligatorioDerecha",q:"Esta señal significa…",o:["Sentido obligatorio hacia la derecha","Giro a la derecha prohibido","Carril derecho recomendado"],a:0,e:"Las señales circulares de fondo azul son de obligación: aquí, circular en el sentido indicado por la flecha."},
+{sign:"curvaDerecha",q:"Esta señal avisa de…",o:["Obligación de girar a la derecha","Una curva peligrosa hacia la derecha","Carril de incorporación por la derecha"],a:1,e:"Las señales triangulares con borde rojo son de peligro. Esta advierte de una curva peligrosa hacia la derecha."},
+{sign:"finProhibiciones",q:"¿Qué indica esta señal?",o:["Fin de todas las prohibiciones impuestas anteriormente","Zona de adelantamiento","Vía sin salida"],a:0,e:"Indica el final de las prohibiciones específicas señalizadas antes para los vehículos en movimiento."},
+{q:"Un semáforo en amarillo fijo obliga a…",o:["Acelerar para pasar antes del rojo","Detenerse, salvo que no pueda hacerlo en condiciones de seguridad","Ceder el paso y continuar"],a:1,e:"El amarillo fijo significa detenerse como si fuera rojo, excepto si al encenderse ya está tan cerca que no puede parar con seguridad."},
+{q:"Un semáforo en amarillo intermitente indica…",o:["Paso prohibido","Obligación de extremar la precaución y, en su caso, ceder el paso","Que el semáforo va a ponerse verde"],a:1,e:"El amarillo intermitente obliga a extremar la precaución y ceder el paso si fuera necesario."},
+{q:"Un semáforo con luz roja intermitente, como en los pasos a nivel, significa…",o:["Precaución","Prohibido pasar","Paso permitido con cuidado"],a:1,e:"La luz roja intermitente prohíbe rebasar el semáforo, igual que la roja fija."},
+{q:"Una línea longitudinal continua en el centro de la calzada significa que…",o:["Se puede pisar para adelantar","Ningún conductor debe atravesarla ni circular sobre ella","Solo la pueden cruzar las motocicletas"],a:1,e:"La línea continua no debe pisarse ni atravesarse, salvo en situaciones puntuales como rebasar un obstáculo cuando lo permite la norma."},
+{q:"Si hay una línea continua junto a una discontinua, el conductor debe respetar…",o:["Siempre la continua","La línea que tenga más próxima a su vehículo","Siempre la discontinua"],a:1,e:"Con dos líneas adosadas, cada conductor debe tener en cuenta la que está más cerca de su lado."},
+{q:"Una flecha curvada pintada en el carril (flecha de retorno) indica que…",o:["Se acerca una línea continua o el fin del carril y debe volver al carril de la derecha","Puede girar","Hay una glorieta"],a:0,e:"La flecha de retorno avisa de que debe volver a su carril porque se aproxima un estrechamiento o una prohibición de adelantar."},
+{q:"Una línea amarilla continua junto al bordillo indica…",o:["Prohibido estacionar","Prohibido parar y estacionar","Zona de carga y descarga"],a:1,e:"La línea amarilla continua prohíbe parar y estacionar. Si es discontinua, solo prohíbe estacionar."},
+{q:"Las señales con fondo amarillo indican…",o:["Zona escolar","Obras o señalización circunstancial","Fin de autovía"],a:1,e:"El fondo amarillo se usa en la señalización de obras y prevalece sobre la señalización fija."},
+{q:"Un agente de tráfico con el brazo levantado verticalmente obliga a…",o:["Continuar la marcha","Detenerse a todos los usuarios que se acerquen, salvo a quienes no puedan hacerlo con seguridad","Girar a la derecha"],a:1,e:"El brazo en alto obliga a detenerse a todos los que se aproximan al agente, salvo si no pueden hacerlo con seguridad."},
+{q:"Un aspa roja iluminada sobre un carril en un panel significa…",o:["Carril cerrado a la circulación","Peligro de accidente","Velocidad reducida"],a:0,e:"El aspa roja en un panel de carril indica que ese carril está cerrado y no se puede circular por él."}
+]},
+{t:"El permiso de conducir", qs:[
+{q:"¿Con cuántos puntos empieza un conductor novel?",o:["12 puntos","8 puntos","10 puntos"],a:1,e:"Los noveles comienzan con 8 puntos. Si no pierden ninguno en dos años, pasan a 12."},
+{q:"Conducir sujetando el teléfono móvil con la mano supone la pérdida de…",o:["3 puntos","6 puntos","4 puntos"],a:1,e:"Desde marzo de 2022, sujetar el móvil con la mano mientras se conduce resta 6 puntos, además de la multa de 200 €."},
+{q:"No utilizar el cinturón de seguridad conlleva la pérdida de…",o:["2 puntos","3 puntos","4 puntos"],a:2,e:"Desde 2022, no usar o usar mal el cinturón, el casco o los sistemas de retención infantil resta 4 puntos."},
+{q:"El permiso de clase B autoriza a conducir turismos con una masa máxima autorizada de hasta…",o:["3.500 kg","4.250 kg","2.500 kg"],a:0,e:"El permiso B permite conducir automóviles de hasta 3.500 kg de MMA y hasta 9 plazas, incluida la del conductor."},
+{q:"¿Qué edad mínima se exige para obtener el permiso de clase B?",o:["17 años","18 años","21 años"],a:1,e:"La edad mínima para el permiso B es de 18 años."},
+{q:"¿Cuál es el número máximo de puntos que puede llegar a tener un conductor?",o:["12","15","20"],a:1,e:"Los conductores sin infracciones durante años reciben bonificaciones hasta un máximo de 15 puntos."},
+{q:"¿Durante cuánto tiempo debe llevar un conductor novel la señal L en la parte trasera del vehículo?",o:["6 meses","1 año","2 años"],a:1,e:"La señal de conductor novel (L blanca sobre fondo verde) es obligatoria durante el primer año."},
+{q:"Si un conductor pierde todos los puntos, podrá obtener de nuevo el permiso tras…",o:["Esperar 6 meses y superar un curso y un examen","Pagar una multa","Esperar 1 mes"],a:0,e:"Pierde la vigencia del permiso; tras 6 meses (3 para profesionales) y un curso de sensibilización, debe superar una prueba teórica."},
+{q:"¿Cuántos puntos se pueden recuperar con un curso de conducción segura y eficiente?",o:["2 puntos","4 puntos","6 puntos"],a:0,e:"Desde 2022, un curso de conducción segura y eficiente reconocido por la DGT suma 2 puntos, con el límite máximo de 15."},
+{q:"El permiso B tiene una vigencia de…",o:["10 años, y 5 a partir de los 65 años","5 años siempre","Es indefinido"],a:0,e:"El permiso B se renueva cada 10 años hasta los 65; a partir de esa edad, cada 5 años."},
+{q:"¿Qué documentos del vehículo debe llevar al circular?",o:["El permiso de circulación y la tarjeta de ITV","Solo el recibo del seguro","La factura de compra"],a:0,e:"Hay que llevar el permiso de circulación y la tarjeta de inspección técnica, además del permiso de conducir (también valen en formato digital en la app miDGT)."},
+{q:"Conducir un vehículo sin haber obtenido nunca el permiso de conducir es…",o:["Una infracción leve","Un delito","Una infracción que solo resta puntos"],a:1,e:"Conducir sin haber obtenido nunca permiso, o habiéndolo perdido por puntos o por decisión judicial, es un delito contra la seguridad vial."}
+]},
+{t:"Estado físico del conductor", qs:[
+{q:"La tasa máxima de alcohol para un conductor con permiso de más de dos años de antigüedad es…",o:["0,25 mg/l en aire espirado","0,15 mg/l en aire espirado","0,50 mg/l en aire espirado"],a:0,e:"Para conductores generales: 0,5 g/l en sangre o 0,25 mg/l en aire espirado."},
+{q:"Un conductor novel (menos de dos años de permiso) no puede superar una tasa de alcohol en aire espirado de…",o:["0,25 mg/l","0,15 mg/l","0,00 mg/l"],a:1,e:"Noveles y profesionales: 0,3 g/l en sangre o 0,15 mg/l en aire espirado."},
+{q:"Conducir con una tasa de alcohol superior a 0,60 mg/l en aire espirado es…",o:["Una infracción grave","Una infracción muy grave","Un delito"],a:2,e:"Superar 0,60 mg/l en aire espirado (1,2 g/l en sangre) es delito, aunque no haya síntomas."},
+{q:"Negarse a hacer la prueba de alcohol cuando lo pide un agente es…",o:["Un derecho del conductor","Un delito","Una infracción leve"],a:1,e:"Negarse a las pruebas de alcohol o drogas requeridas por un agente es un delito."},
+{q:"Tomar café o darse una ducha fría antes de conducir…",o:["Elimina el alcohol del organismo","No elimina el alcohol; solo el tiempo lo hace","Reduce la tasa a la mitad"],a:1,e:"El hígado elimina el alcohol a un ritmo fijo. Ningún truco acelera ese proceso."},
+{q:"El alcohol, respecto al tiempo de reacción del conductor…",o:["Lo reduce","Lo aumenta","No lo modifica"],a:1,e:"El alcohol hace que tardemos más en reaccionar, así que aumenta la distancia recorrida antes de empezar a frenar."},
+{q:"Si un control detecta presencia de drogas en el organismo del conductor…",o:["Solo se sanciona si hay síntomas","Es una infracción aunque no haya síntomas","No pasa nada si es poca cantidad"],a:1,e:"La norma castiga conducir con presencia de drogas en el organismo, sin necesidad de síntomas. Resta 6 puntos."},
+{q:"Un medicamento con el pictograma de un coche dentro de un triángulo rojo en su envase indica que…",o:["Puede afectar a la capacidad de conducir","Está prohibido conducir durante un mes","Solo afecta a conductores profesionales"],a:0,e:"Ese pictograma avisa de que el fármaco puede alterar la capacidad para conducir. Lee el prospecto y consulta al médico."},
+{q:"En un viaje largo, ¿cada cuánto conviene descansar?",o:["Cada 2 horas o 200 km aproximadamente","Cada 5 horas","Solo cuando se nota sueño"],a:0,e:"Se recomienda parar cada 2 horas o unos 200 km, porque la fatiga aparece antes de que la notemos."},
+{q:"Si nota somnolencia mientras conduce, lo correcto es…",o:["Bajar la ventanilla y subir la música","Parar en un lugar seguro y descansar","Acelerar para llegar antes"],a:1,e:"Abrir la ventana o poner música solo enmascaran el sueño unos minutos. La única solución es parar y descansar."},
+{q:"Una comida abundante antes de conducir…",o:["Mejora la concentración","Favorece la somnolencia","No influye"],a:1,e:"Las comidas copiosas provocan somnolencia y reducen la atención."},
+{q:"El uso de auriculares conectados a un reproductor mientras se conduce…",o:["Está permitido a volumen bajo","Está prohibido","Solo está prohibido en ciudad"],a:1,e:"Está prohibido conducir con auriculares conectados a aparatos de sonido. Resta 3 puntos."},
+{q:"El alcohol produce en la visión del conductor…",o:["Una mejora de la visión nocturna","Un estrechamiento del campo visual (visión en túnel)","Ningún efecto"],a:1,e:"El alcohol reduce el campo visual, empeora la percepción de distancias y aumenta el tiempo de recuperación tras un deslumbramiento."}
+]},
+{t:"Los demás usuarios", qs:[
+{q:"Fuera de poblado, si no hay acera ni arcén, los peatones deben circular…",o:["Por su derecha","Por su izquierda","Por el centro de la calzada"],a:1,e:"Fuera de poblado los peatones circulan por su izquierda, de frente a los vehículos que se acercan."},
+{q:"Un peatón que camina de noche por una vía interurbana debe llevar…",o:["Ropa oscura","Un elemento luminoso o reflectante","Nada especial"],a:1,e:"De noche o con poca visibilidad, fuera de poblado, el peatón debe ir provisto de un elemento luminoso o reflectante homologado."},
+{q:"¿Es obligatorio el casco para un ciclista adulto en vías interurbanas?",o:["No, nunca","Sí, salvo excepciones concretas previstas en la norma","Solo de noche"],a:1,e:"En vías interurbanas el casco es obligatorio para los ciclistas, salvo excepciones concretas. Los menores de 16 años deben llevarlo también en ciudad."},
+{q:"¿Pueden los ciclistas circular en paralelo?",o:["No, nunca","Sí, en columna de a dos, y deben ir en fila en tramos sin visibilidad o con tráfico","Sí, en grupos de tres"],a:1,e:"Pueden ir de dos en dos, lo más a la derecha posible, y en fila india cuando la visibilidad sea escasa o se formen aglomeraciones."},
+{q:"Un peatón con un bastón blanco es…",o:["Una persona mayor","Una persona con discapacidad visual","Un agente de tráfico"],a:1,e:"El bastón blanco identifica a personas ciegas o con baja visión. Hay que extremar la precaución y cederles el paso."},
+{q:"Si ve niños jugando junto a la calzada, debe…",o:["Tocar el claxon","Reducir la velocidad y estar preparado para detenerse","Mantener la velocidad"],a:1,e:"Los niños son imprevisibles: pueden cruzar de repente. Hay que moderar la velocidad."},
+{q:"Si ve un autobús escolar detenido con niños subiendo o bajando, debe…",o:["Adelantarlo rápido","Extremar la precaución y reducir la velocidad","Tocar el claxon para avisar"],a:1,e:"Hay que moderar la velocidad y extremar la precaución porque algún niño puede cruzar por delante o por detrás del autobús."},
+{q:"Si encuentra animales sueltos en la calzada, lo correcto es…",o:["Tocar el claxon y acelerar","Reducir la velocidad y, si es necesario, detenerse","Esquivarlos con un volantazo"],a:1,e:"Hay que reducir la velocidad con suavidad. Los volantazos pueden provocar la pérdida de control."},
+{q:"Las personas mayores que cruzan la calzada…",o:["Siempre calculan bien las distancias","Pueden necesitar más tiempo para cruzar; hay que tener paciencia","No tienen preferencia"],a:1,e:"Suelen moverse más despacio y a veces calculan peor la velocidad de los vehículos. Hay que darles tiempo."},
+{q:"En una zona peatonal por la que se permite el acceso de vehículos, la preferencia es…",o:["De los vehículos","De los peatones","Del que llegue primero"],a:1,e:"En zonas peatonales los peatones tienen preferencia y los vehículos deben circular con extrema precaución."},
+{q:"Al abrir la puerta del coche en una calle con tráfico, debe…",o:["Abrirla rápido para salir antes","Comprobar antes que no se acercan vehículos, bicicletas o motos","Tocar el claxon"],a:1,e:"Antes de abrir hay que mirar por el retrovisor y por encima del hombro. Un gesto útil es abrir con la mano más alejada de la puerta."}
+]},
+{t:"La visibilidad y peligros de la vía", qs:[
+{q:"Con niebla densa, lo correcto es…",o:["Poner las luces largas","Reducir la velocidad, aumentar la distancia de seguridad y encender las luces antiniebla","Seguir de cerca las luces del vehículo de delante"],a:1,e:"Con niebla las largas empeoran la visibilidad. Hay que ir despacio, separarse más y usar las antiniebla."},
+{q:"Con fuerte viento lateral, al adelantar a un camión debe…",o:["Soltar el volante","Sujetar el volante con firmeza, sobre todo al terminar el adelantamiento","Acelerar al máximo"],a:1,e:"Al rebasar el camión desaparece su efecto pantalla y el viento empuja de golpe: hay que sujetar bien el volante."},
+{q:"¿Dónde es más probable encontrar hielo en la calzada?",o:["En las rectas soleadas","En zonas de sombra, puentes y viaductos","En las ciudades"],a:1,e:"Las zonas de sombra, los puentes y los viaductos se enfrían antes y conservan más tiempo el hielo."},
+{q:"Cuando empieza a llover tras un periodo seco, la calzada…",o:["Es más adherente","Es especialmente deslizante los primeros minutos","No cambia"],a:1,e:"El agua se mezcla con el polvo, el aceite y la goma del asfalto y forma una capa muy resbaladiza."},
+{q:"El ángulo muerto es…",o:["La zona que no se ve en los retrovisores","Un tipo de curva","La zona de detención del semáforo"],a:0,e:"Es la zona alrededor del vehículo que no se ve en los espejos. Antes de cambiar de carril hay que mirar por encima del hombro."},
+{q:"Si en un paso a nivel con barreras estas empiezan a bajar, debe…",o:["Acelerar para pasar","Detenerse y no cruzar","Cruzar con precaución"],a:1,e:"Está prohibido entrar en un paso a nivel cuando las barreras están bajando o las luces rojas parpadean."},
+{q:"Si hay un incendio en un túnel y no puede salir con el coche, debe…",o:["Quedarse dentro del vehículo","Dejar el vehículo, con la llave puesta, e ir a una salida de emergencia","Dar la vuelta"],a:1,e:"Hay que apagar el motor, dejar la llave puesta para que puedan moverlo los servicios de emergencia y salir a pie por la salida de emergencia."},
+{q:"Si hay retención dentro de un túnel, lo recomendable es…",o:["Apagar el motor si la espera es larga","Adelantar por el otro carril","Tocar el claxon"],a:0,e:"Con el vehículo detenido durante un tiempo, apagar el motor reduce la contaminación del túnel. Se debe mantener la distancia con el de delante."},
+{q:"De noche, la velocidad debe permitirle detenerse…",o:["Dentro de la distancia que iluminan sus faros","En 100 metros siempre","Cuando vea las luces del otro"],a:0,e:"Si no puede detenerse dentro del tramo iluminado, circula demasiado deprisa para las condiciones."},
+{q:"Si el parabrisas se empaña por dentro, lo más eficaz es…",o:["Limpiarlo con la mano","Usar el aire acondicionado o la ventilación dirigida al parabrisas","Bajar la calefacción al mínimo"],a:1,e:"El aire acondicionado seca el aire y desempaña con rapidez. También ayuda la luneta térmica trasera."},
+{q:"Circulando por una zona de obras, debe…",o:["Respetar la velocidad y las indicaciones de la señalización de obras","Mantener la velocidad genérica de la vía","Adelantar a los vehículos lentos"],a:0,e:"La señalización de obras prevalece sobre la fija y suele imponer límites de velocidad más bajos."}
+]},
+{t:"Adherencia, neumáticos y frenos", qs:[
+{q:"Si la velocidad se duplica, la distancia de frenado…",o:["Se duplica","Se multiplica aproximadamente por cuatro","Se mantiene igual"],a:1,e:"La distancia de frenado crece con el cuadrado de la velocidad: al doble de velocidad, unas cuatro veces más distancia."},
+{q:"Circulando a 90 km/h, ¿cuántos metros recorre aproximadamente durante 1 segundo de tiempo de reacción?",o:["Unos 9 metros","Unos 25 metros","Unos 50 metros"],a:1,e:"90 km/h equivalen a 25 metros por segundo."},
+{q:"La distancia de detención es la suma de…",o:["La distancia de reacción y la de frenado","La distancia de frenado y la de seguridad","La velocidad y el tiempo"],a:0,e:"Detención = lo que recorre mientras reacciona + lo que recorre mientras frena."},
+{q:"Si nota que el coche hace aquaplaning, debe…",o:["Frenar a fondo","Soltar el acelerador sin frenar bruscamente y sujetar firme el volante","Girar el volante con fuerza"],a:1,e:"Hay que dejar que el neumático recupere adherencia: sin frenazos ni volantazos, soltando el acelerador."},
+{q:"El sistema ABS sirve para…",o:["Frenar en menos metros en cualquier situación","Evitar el bloqueo de las ruedas y poder mantener el control de la dirección al frenar","Controlar la tracción al acelerar"],a:1,e:"El ABS impide que las ruedas se bloqueen, así el conductor puede seguir dirigiendo el coche durante una frenada fuerte."},
+{q:"El control de estabilidad (ESP) ayuda a…",o:["Aparcar","Corregir derrapes y mantener la trayectoria","Ahorrar combustible"],a:1,e:"El ESP actúa sobre los frenos de cada rueda y el motor para corregir subvirajes y sobrevirajes."},
+{q:"¿Cuál es la profundidad mínima legal del dibujo de los neumáticos de un turismo?",o:["1 mm","1,6 mm","3 mm"],a:1,e:"La profundidad mínima en las ranuras principales es de 1,6 mm, aunque se recomienda cambiarlos antes."},
+{q:"La presión de los neumáticos debe comprobarse…",o:["Con los neumáticos en frío","Después de un viaje largo","Con el coche cargado al máximo"],a:0,e:"En caliente la presión sube y la medida engaña. Hay que medirla en frío, con los valores que indica el fabricante."},
+{q:"Un neumático con presión baja se desgasta más…",o:["Por el centro","Por los bordes","De forma uniforme"],a:1,e:"Con poca presión apoya más en los hombros y se desgasta por los bordes. Con demasiada presión se desgasta por el centro."},
+{q:"Las cadenas para nieve se colocan en…",o:["Las ruedas motrices","Las ruedas traseras siempre","Todas las ruedas obligatoriamente"],a:0,e:"Las cadenas se montan en las ruedas motrices, que son las que transmiten la fuerza al suelo."},
+{q:"En una bajada larga y pronunciada, para no sobrecalentar los frenos conviene…",o:["Bajar en punto muerto","Usar el freno motor con una marcha corta","Pisar el freno de forma continua"],a:1,e:"Frenar con el motor evita que los frenos se calienten y pierdan eficacia (fading). Bajar en punto muerto está prohibido."},
+{q:"Los neumáticos de un mismo eje deben ser…",o:["De cualquier marca y medida","Del mismo tipo, medida y características","Uno nuevo y otro usado"],a:1,e:"Los neumáticos de un mismo eje deben ser iguales en tipo, medida y características para que el coche se comporte de forma equilibrada."}
+]},
+{t:"Seguridad y conducción económica", qs:[
+{q:"Para conducir de forma eficiente conviene…",o:["Usar marchas cortas y revoluciones altas","Circular en la marcha más larga posible a bajas revoluciones","Acelerar y frenar con frecuencia"],a:1,e:"Las marchas largas a pocas revoluciones consumen menos. Hay que subir de marcha pronto."},
+{q:"Al arrancar un motor moderno, lo recomendable es…",o:["Pisar el acelerador varias veces","Arrancar sin pisar el acelerador e iniciar la marcha enseguida","Dejarlo calentar 10 minutos parado"],a:1,e:"Los motores actuales no necesitan calentarse parados: se arranca sin acelerar y se inicia la marcha suave."},
+{q:"Si va a estar detenido más de un minuto, conviene…",o:["Dejar el motor en marcha","Apagar el motor","Acelerar en punto muerto"],a:1,e:"Con paradas de más de 60 segundos compensa apagar el motor para ahorrar combustible y emisiones."},
+{q:"Llevar una baca o un cofre vacío en el techo…",o:["No influye en el consumo","Aumenta el consumo por la resistencia al aire","Mejora la estabilidad"],a:1,e:"Todo lo que sobresale aumenta la resistencia aerodinámica y el consumo, aunque vaya vacío."},
+{q:"Anticiparse a lo que va a ocurrir en el tráfico permite…",o:["Frenar menos y ahorrar combustible","Circular más rápido","Nada especial"],a:0,e:"Mirar lejos y prever la situación permite levantar el pie a tiempo, frenar menos y consumir menos."},
+{q:"El reposacabezas bien colocado debe quedar con su parte superior…",o:["A la altura del cuello","A la altura de la parte superior de la cabeza","Por debajo de los hombros"],a:1,e:"Debe quedar a la altura de la parte superior de la cabeza y lo más cerca posible de ella para proteger en caso de alcance."},
+{q:"La banda diagonal del cinturón de seguridad debe pasar…",o:["Por el cuello","Por el centro de la clavícula y el pecho","Por debajo del brazo"],a:1,e:"La banda diagonal va sobre la clavícula y el pecho, sin tocar el cuello; la horizontal, sobre las caderas."},
+{q:"La posición correcta al volante es con los brazos…",o:["Totalmente estirados","Ligeramente flexionados","Muy doblados, pegados al volante"],a:1,e:"Con los brazos ligeramente flexionados se controla mejor el volante y se reduce el riesgo en un choque."},
+{q:"Si tiene que salir del vehículo en una vía interurbana por una avería, debe ponerse…",o:["El chaleco reflectante antes de salir","El chaleco solo si es de noche","Nada especial"],a:0,e:"El chaleco reflectante es obligatorio al salir del vehículo inmovilizado en la calzada o el arcén de una vía interurbana."},
+{q:"Circular con las ventanillas bajadas a alta velocidad…",o:["Reduce el consumo","Aumenta el consumo por la resistencia aerodinámica","No influye"],a:1,e:"A velocidades altas, las ventanillas abiertas empeoran la aerodinámica y aumentan el consumo."}
+]},
+{t:"Accidentes y primeros auxilios", qs:[
+{q:"Si su vehículo queda inmovilizado en la calzada, ¿qué dispositivo de señalización debe usar desde el 1 de enero de 2026?",o:["Los dos triángulos de emergencia","La baliza luminosa V-16 conectada","Solo las luces de emergencia"],a:1,e:"Desde 2026 la baliza V-16 conectada con la DGT sustituye a los triángulos. Se coloca en el techo sin necesidad de salir a la calzada."},
+{q:"¿Qué significa la conducta PAS ante un accidente?",o:["Parar, Avisar, Salir","Proteger, Avisar, Socorrer","Prevenir, Atender, Salvar"],a:1,e:"PAS: primero proteger la zona, después avisar a los servicios de emergencia y por último socorrer a los heridos."},
+{q:"¿Cuál es el teléfono de emergencias en toda la Unión Europea?",o:["091","112","062"],a:1,e:"El 112 es el número único de emergencias en toda la UE y coordina sanitarios, bomberos y policía."},
+{q:"¿Debe quitar el casco a un motorista herido?",o:["Sí, siempre","No, salvo que no respire o esté vomitando y sepa hacerlo","Sí, para que respire mejor"],a:1,e:"Quitar el casco puede agravar una lesión de columna. Solo se hace si es imprescindible para mantenerle con vida."},
+{q:"¿Cuándo se debe mover a un herido de un accidente?",o:["Siempre, para sacarlo del coche","Solo si hay un peligro inminente, como un incendio","Nunca, en ninguna circunstancia"],a:1,e:"Moverlo puede agravar lesiones. Solo se hace si corre un peligro mayor quedándose donde está."},
+{q:"¿Se debe dar de beber agua a un herido?",o:["Sí, para que se recupere","No","Solo si tiene sed"],a:1,e:"No se debe dar de comer ni de beber a un herido: puede necesitar una operación o atragantarse."},
+{q:"Para detener una hemorragia externa, lo primero es…",o:["Hacer un torniquete","Presionar directamente sobre la herida con un apósito o tela limpia","Echar alcohol"],a:1,e:"La compresión directa sobre la herida es la primera medida. El torniquete es un último recurso."},
+{q:"Un herido inconsciente que respira debe colocarse…",o:["Boca arriba con las piernas en alto","En posición lateral de seguridad","Sentado"],a:1,e:"La posición lateral de seguridad mantiene libre la vía respiratoria y evita que se ahogue con el vómito, si no hay sospecha de lesión de columna."},
+{q:"En la reanimación cardiopulmonar de un adulto se alternan…",o:["30 compresiones y 2 ventilaciones","15 compresiones y 1 ventilación","5 compresiones y 5 ventilaciones"],a:0,e:"La secuencia es de 30 compresiones torácicas y 2 ventilaciones. Si no sabe ventilar, haga solo compresiones continuas."},
+{q:"Ante una quemadura, lo recomendable es…",o:["Aplicar agua fría o templada abundante","Reventar las ampollas","Aplicar aceite"],a:0,e:"El agua a temperatura fresca durante varios minutos enfría la zona y alivia. No hay que reventar ampollas ni poner remedios caseros."},
+{q:"No socorrer a una víctima de un accidente pudiendo hacerlo sin riesgo es…",o:["Una falta leve","Un delito de omisión del deber de socorro","Algo permitido"],a:1,e:"La omisión del deber de socorro es un delito recogido en el Código Penal."},
+{q:"En un accidente leve sin heridos, lo habitual es…",o:["Rellenar la declaración amistosa de accidente","Abandonar el lugar","Esperar siempre a la policía"],a:0,e:"Si no hay heridos, los conductores pueden rellenar la declaración amistosa y retirar los vehículos para no entorpecer la circulación."}
+]},
+{t:"Mantenimiento del automóvil", qs:[
+{q:"Un turismo de uso particular debe pasar su primera ITV cuando cumple…",o:["2 años","4 años","5 años"],a:1,e:"Primera ITV a los 4 años, después cada 2 años hasta los 10 y, desde entonces, cada año."},
+{q:"¿Qué seguro es obligatorio para circular con un vehículo a motor?",o:["El seguro a todo riesgo","El seguro de responsabilidad civil","El seguro de lunas"],a:1,e:"El seguro obligatorio cubre la responsabilidad civil por los daños causados a terceros."},
+{q:"El nivel de aceite del motor debe comprobarse…",o:["Con el motor en marcha","Con el motor frío y el coche en terreno llano","Justo después de un viaje largo"],a:1,e:"En llano y con el motor frío o tras unos minutos parado, para que el aceite baje al cárter y la medida sea fiable."},
+{q:"¿Se puede abrir el tapón del depósito del líquido refrigerante con el motor caliente?",o:["Sí, sin problema","No, porque puede salir líquido a presión y quemar","Solo con guantes"],a:1,e:"El circuito está a presión y a alta temperatura. Hay que esperar a que se enfríe."},
+{q:"Si se enciende un testigo rojo en el cuadro de mandos, debe…",o:["Seguir hasta casa","Detenerse en cuanto sea posible con seguridad y revisar la avería","Ignorarlo si el coche funciona"],a:1,e:"Los testigos rojos avisan de averías graves o peligrosas, como falta de presión de aceite o fallo de frenos."},
+{q:"Si baja el nivel del líquido de frenos, puede deberse a…",o:["El desgaste de las pastillas o una fuga","El uso del aire acondicionado","Nada, es normal que se gaste mucho"],a:0,e:"El nivel baja un poco con el desgaste de las pastillas. Si baja mucho, puede haber una fuga y hay que revisarlo cuanto antes."},
+{q:"Si la ITV da resultado desfavorable, el titular tiene un plazo para corregir los defectos de…",o:["15 días","2 meses","6 meses"],a:1,e:"Con inspección desfavorable hay 2 meses para reparar y volver. Con inspección negativa el vehículo solo puede ir al taller o a la ITV."},
+{q:"Las escobillas del limpiaparabrisas deben cambiarse cuando…",o:["Dejan marcas o no limpian bien","Cada 5 años","Nunca"],a:0,e:"Unas escobillas gastadas reducen la visibilidad con lluvia. Hay que sustituirlas en cuanto dejen rayas o salten."},
+{q:"Un filtro de aire muy sucio provoca…",o:["Menos consumo","Mayor consumo y pérdida de potencia","Mejor refrigeración"],a:1,e:"Si el motor no respira bien, rinde menos y gasta más. Se cambia según el plan del fabricante."},
+{q:"La correa de distribución debe cambiarse…",o:["Cuando se rompa","Según los kilómetros o el tiempo que indique el fabricante","Cada año"],a:1,e:"Si se rompe puede causar una avería grave del motor, por eso se cambia de forma preventiva."}
+]}
 ];
+const Q = TEMAS.flatMap(T => T.qs.map(x => Object.assign({c: T.t}, x)));
 
 /* ---------- Estado ---------- */
 const EXAM_N=30, EXAM_SECS=30*60, MAX_ERR=3;
-const S={view:"home",mode:null,qs:[],ans:[],i:0,left:EXAM_SECS,tick:null,confirm:false,filter:"all",result:null};
+const S={view:"home",mode:null,label:"",pool:null,qs:[],ans:[],i:0,left:EXAM_SECS,tick:null,confirm:false,filter:"all",result:null};
 
 function store(key,val){try{if(val===undefined){return JSON.parse(localStorage.getItem(key)||"null")}localStorage.setItem(key,JSON.stringify(val))}catch(e){return null}}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function fmt(s){const m=Math.floor(s/60),x=s%60;return String(m).padStart(2,"0")+":"+String(x).padStart(2,"0")}
 function esc(t){return t.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const key=q=>q.q+"|"+(q.sign||"");
 const L=["A","B","C"];
 const app=document.getElementById("app");
 
-function start(mode){
+/* Estadísticas por pregunta: {clave: [aciertos, fallos, últimoResultado(1|0)]} */
+function getStats(){return store("tcb-stats")||{}}
+function record(q,ok){const s=getStats();const r=s[key(q)]||[0,0,0];r[ok?0:1]++;r[2]=ok?1:0;s[key(q)]=r;store("tcb-stats",s)}
+function failedQs(){const s=getStats();return Q.filter(q=>{const r=s[key(q)];return r&&r[2]===0})}
+function temaStats(t){const s=getStats();let seen=0,ok=0;TEMAS.find(x=>x.t===t).qs.forEach(q=>{const r=s[key(q)];if(r){seen++;if(r[2]===1)ok++}});return{seen,ok}}
+
+/* Cada vez que se empieza, se barajan también las opciones de cada pregunta */
+function prepare(q){const order=shuffle([0,1,2].slice(0,q.o.length));return Object.assign({},q,{o:order.map(k=>q.o[k]),a:order.indexOf(q.a)})}
+
+function start(mode,pool,label){
   clearInterval(S.tick);
   S.mode=mode; S.view="quiz"; S.i=0; S.confirm=false; S.filter="all";
-  S.qs=shuffle(Q).slice(0,mode==="exam"?EXAM_N:Q.length);
+  S.pool=pool||Q; S.label=label||"";
+  const base=shuffle(S.pool);
+  S.qs=(mode==="exam"?base.slice(0,EXAM_N):base).map(prepare);
   S.ans=S.qs.map(()=>null);
   S.left=EXAM_SECS;
   if(mode==="exam"){
@@ -228,15 +422,27 @@ function finish(){
   const ok=S.qs.length-wrong;
   const pass=wrong<=MAX_ERR;
   S.result={wrong,ok,pass,time:EXAM_SECS-S.left,blank:S.ans.filter(a=>a===null).length};
-  const h=store("tcb-history")||[];
-  h.unshift({d:new Date().toISOString(),wrong,pass,time:S.result.time});
-  store("tcb-history",h.slice(0,8));
+  if(S.mode==="exam"){
+    S.qs.forEach((q,k)=>{if(S.ans[k]!==null)record(q,S.ans[k]===q.a)});
+    const h=store("tcb-history")||[];
+    h.unshift({d:new Date().toISOString(),wrong,pass,time:S.result.time});
+    store("tcb-history",h.slice(0,8));
+  }
   S.view="result"; S.filter=wrong?"w":"all"; render(); window.scrollTo(0,0);
 }
 
 function home(){
   const h=store("tcb-history")||[];
   const passes=h.filter(x=>x.pass).length;
+  const fails=failedQs().length;
+  const temas=TEMAS.map((T,k)=>{
+    const st=temaStats(T.t), pct=st.seen?Math.round(st.ok/T.qs.length*100):0;
+    return `<button class="tema" data-tema="${k}">
+      <span class="tema-name">${T.t}</span>
+      <span class="tema-meta">${st.seen?`${st.ok}/${T.qs.length} acertadas`:`${T.qs.length} preguntas`}</span>
+      <span class="meter" aria-hidden="true"><i style="width:${pct}%"></i></span>
+    </button>`;
+  }).join("");
   return `
   <header class="brand"><div class="plate">B</div><div><h1>Test Carné B</h1><p>Simulador del examen teórico del permiso de conducir</p></div></header>
   <section class="panel">
@@ -248,15 +454,24 @@ function home(){
     </div>
     <div class="modes">
       <button class="btn btn-primary" data-act="exam">Hacer examen<small>30 preguntas al azar y cronómetro</small></button>
-      <button class="btn btn-ghost" data-act="practice">Modo práctica<small>Las ${Q.length} preguntas con corrección al instante</small></button>
+      <button class="btn btn-ghost" data-act="practice">Práctica libre<small>Las ${Q.length} preguntas con corrección al instante</small></button>
     </div>
+    <button class="btn btn-review" data-act="review" ${fails?"":"disabled"}>
+      <span>Repasar mis fallos</span><span class="count">${fails}</span>
+    </button>
+    ${fails?"":`<p class="note" style="margin-top:8px">Aquí se guardarán las preguntas que falles para que las repases.</p>`}
+  </section>
+  <section class="panel">
+    <div class="label">Practicar por temas</div>
+    <p class="note" style="margin:6px 0 12px">Los 16 temas del manual. La barra muestra cuántas preguntas del tema has acertado la última vez que las respondiste.</p>
+    <div class="temas">${temas}</div>
   </section>
   <section class="panel">
     <div class="label">Tus últimos exámenes</div>
     ${h.length?`<p class="note" style="margin-top:6px">${passes} aptos de ${h.length}</p><ul class="history">${h.map(x=>`<li><span>${new Date(x.d).toLocaleDateString("es-ES",{day:"numeric",month:"short"})} · ${fmt(x.time)}</span><span>${x.wrong} fallo${x.wrong===1?"":"s"} <span class="pill ${x.pass?"ok":"ko"}">${x.pass?"APTO":"NO APTO"}</span></span></li>`).join("")}</ul>`
       :`<p class="note" style="margin-top:6px">Aún no has hecho ningún examen en este navegador. Tus resultados aparecerán aquí.</p>`}
   </section>
-  <p class="note">Preguntas de práctica redactadas según el Reglamento General de Circulación vigente en 2026. No son las preguntas oficiales de la DGT.</p>`;
+  <p class="note">${Q.length} preguntas de práctica redactadas según el Reglamento General de Circulación vigente en 2026. No son las preguntas oficiales de la DGT. Tu progreso se guarda solo en este navegador.</p>`;
 }
 
 function quiz(){
@@ -276,10 +491,11 @@ function quiz(){
     return `<button class="${c}" data-go="${k}" aria-label="Pregunta ${k+1}">${k+1}</button>`;
   }).join("");
   const last=S.i===S.qs.length-1;
+  const hits=S.ans.filter((v,k)=>v!==null&&v===S.qs[k].a).length;
   return `
   <div class="bar">
     <button class="btn btn-ghost btn-small" data-act="home">Salir</button>
-    ${exam?`<div class="timer${S.left<=300?" low":""}" id="timer" aria-live="off">${fmt(S.left)}</div>`:`<div class="qnum">Práctica · ${S.ans.filter((v,k)=>v!==null&&v===S.qs[k].a).length} aciertos</div>`}
+    ${exam?`<div class="timer${S.left<=300?" low":""}" id="timer" aria-live="off">${fmt(S.left)}</div>`:`<div class="qnum">${S.label?esc(S.label)+" · ":""}${hits} aciertos</div>`}
     <button class="btn btn-primary btn-small" data-act="${exam?"ask":"finish"}">${exam?"Corregir":"Terminar"}</button>
   </div>
   <div class="progress"><i style="width:${answered/S.qs.length*100}%"></i></div>
@@ -303,7 +519,7 @@ function result(){
   const r=S.result, exam=S.mode==="exam";
   const items=S.qs.map((q,k)=>({q,k,v:S.ans[k]})).filter(x=>S.filter==="all"||(S.filter==="w"?x.v!==x.q.a:x.v===x.q.a));
   return `
-  <header class="brand"><div class="plate">B</div><div><h1>${exam?"Resultado del examen":"Resultado de la práctica"}</h1><p>${exam?`Tiempo empleado: ${fmt(r.time)}`:`${S.qs.length} preguntas`}</p></div></header>
+  <header class="brand"><div class="plate">B</div><div><h1>${exam?"Resultado del examen":"Resultado de la práctica"}</h1><p>${exam?`Tiempo empleado: ${fmt(r.time)}`:`${S.label?esc(S.label)+" · ":""}${S.qs.length} preguntas`}</p></div></header>
   <section class="panel verdict ${r.pass?"ok":"ko"}">
     ${exam?`<h2>${r.pass?"APTO":"NO APTO"}</h2><p>${r.pass?"Enhorabuena, has aprobado.":"Para aprobar necesitas 3 fallos o menos."}</p>`:`<h2>${Math.round(r.ok/S.qs.length*100)} %</h2><p>de aciertos</p>`}
     <div class="score">
@@ -311,7 +527,7 @@ function result(){
       <div class="rule"><b style="color:var(--red)">${r.wrong-r.blank}</b><span>fallos</span></div>
       <div class="rule"><b style="color:var(--muted)">${r.blank}</b><span>en blanco</span></div>
     </div>
-    <div class="modes"><button class="btn btn-primary" data-act="exam">Nuevo examen</button><button class="btn btn-ghost" data-act="home">Volver al inicio</button></div>
+    <div class="modes">${exam?`<button class="btn btn-primary" data-act="exam">Nuevo examen</button>`:`<button class="btn btn-primary" data-act="again">Repetir</button>`}<button class="btn btn-ghost" data-act="home">Volver al inicio</button></div>
   </section>
   <div class="tabs" role="group" aria-label="Filtrar corrección">
     <button class="tab" data-f="w" aria-pressed="${S.filter==="w"}">Fallos y en blanco (${r.wrong})</button>
@@ -334,18 +550,21 @@ function render(){
 }
 
 app.addEventListener("click",e=>{
-  const b=e.target.closest("button"); if(!b)return;
+  const b=e.target.closest("button"); if(!b||b.disabled)return;
   if(b.dataset.opt!==undefined){
     const k=+b.dataset.opt;
-    if(S.mode==="practice"&&S.ans[S.i]!==null)return;
+    if(S.mode==="practice"){ if(S.ans[S.i]!==null)return; record(S.qs[S.i],k===S.qs[S.i].a); }
     S.ans[S.i]=k; render(); return;
   }
   if(b.dataset.go!==undefined){S.i=+b.dataset.go;S.confirm=false;render();return}
   if(b.dataset.f){S.filter=b.dataset.f;render();return}
+  if(b.dataset.tema!==undefined){const T=TEMAS[+b.dataset.tema];start("practice",T.qs.map(x=>Object.assign({c:T.t},x)),T.t);return}
   switch(b.dataset.act){
     case "exam":start("exam");break;
     case "practice":start("practice");break;
-    case "home":clearInterval(S.tick);S.view="home";render();break;
+    case "review":{const f=failedQs(); if(f.length)start("practice",f,"Mis fallos");break}
+    case "again":{const p=S.label==="Mis fallos"?failedQs():S.pool; if(p.length)start("practice",p,S.label); else {S.view="home";render()} break}
+    case "home":clearInterval(S.tick);S.view="home";render();window.scrollTo(0,0);break;
     case "next":if(S.i<S.qs.length-1){S.i++;render();window.scrollTo(0,0)}break;
     case "prev":if(S.i>0){S.i--;render();window.scrollTo(0,0)}break;
     case "ask":S.confirm=true;render();window.scrollTo(0,0);break;

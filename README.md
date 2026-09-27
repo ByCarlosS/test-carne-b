@@ -6,8 +6,11 @@ Simulador del examen teórico del permiso de conducir **clase B** (DGT, España)
 
 ## Características
 
+- **192 preguntas** originales organizadas en los 16 temas del manual, con explicación en cada una.
 - **Modo examen:** 30 preguntas al azar, cronómetro de 30 minutos y resultado APTO / NO APTO (máximo 3 fallos), igual que el examen real.
-- **Modo práctica:** todas las preguntas con corrección y explicación al instante.
+- **Práctica libre y por temas:** corrección y explicación al instante, con barra de progreso por tema.
+- **Repasar mis fallos:** las preguntas falladas se guardan para repasarlas hasta acertarlas.
+- Las opciones se barajan en cada intento para que no se memorice la letra.
 - Revisión final de fallos con la respuesta correcta y su explicación.
 - Señales de tráfico dibujadas en SVG.
 - Historial de los últimos exámenes guardado en el navegador (`localStorage`).
